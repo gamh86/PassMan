@@ -2875,11 +2875,13 @@ public class PasswordManager extends JFrame
 
 		JLabel labelId = new JLabel(currentLanguage.get(STRING_PASSWORD_ID));
 		JLabel labelUsername = new JLabel(currentLanguage.get(STRING_USERNAME));
-		JLabel labelPasswordLen = new JLabel(currentLanguage.get(STRING_PASSWORD_LENGTH) + " (" + currentLanguage.get(STRING_LEAVE_BLANK) + ")");
+		JLabel labelPasswordLen = new JLabel(currentLanguage.get(STRING_PASSWORD_LENGTH));
+		JLabel labelLeaveBlank = new JLabel(currentLanguage.get(STRING_LEAVE_BLANK));
 
 		labelId.setFont(fontLabel);
 		labelUsername.setFont(fontLabel);
 		labelPasswordLen.setFont(fontLabel);
+		labelLeaveBlank.setFont(new Font("Verdana", Font.PLAIN, 14));
 
 		JTextField tfId = new JTextField(entry.getId());
 		JTextField tfUsername = new JTextField(entry.getUsername());
@@ -2905,7 +2907,7 @@ public class PasswordManager extends JFrame
 
 		north += iconLocked128.getIconHeight() + 60;
 
-		spring.putConstraint(SpringLayout.WEST, labelId, 40, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, labelId, 60, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelId, north, SpringLayout.NORTH, contentPane);
 
 		north += 30;
@@ -2915,7 +2917,7 @@ public class PasswordManager extends JFrame
 
 		north += 50;
 
-		spring.putConstraint(SpringLayout.WEST, labelUsername, 40, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, labelUsername, 60, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelUsername, north, SpringLayout.NORTH, contentPane);
 
 		north += 30;
@@ -2925,8 +2927,13 @@ public class PasswordManager extends JFrame
 
 		north += 50;
 
-		spring.putConstraint(SpringLayout.WEST, labelPasswordLen, 40, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, labelPasswordLen, 60, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelPasswordLen, north, SpringLayout.NORTH, contentPane);
+
+		north += 25;
+
+		spring.putConstraint(SpringLayout.WEST, labelLeaveBlank, 64, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, labelLeaveBlank, north, SpringLayout.NORTH, contentPane);
 
 		north += 30;
 
@@ -2944,6 +2951,7 @@ public class PasswordManager extends JFrame
 		contentPane.add(labelUsername);
 		contentPane.add(tfUsername);
 		contentPane.add(labelPasswordLen);
+		contentPane.add(labelLeaveBlank);
 		contentPane.add(tfPasswordLen);
 		contentPane.add(buttonConfirm);
 
