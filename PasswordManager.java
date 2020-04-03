@@ -549,6 +549,7 @@ public class PasswordManager extends JFrame
 
 	private static final int STRING_ERROR_TOO_MANY_ATTEMPTS = 50;
 	private static final int STRING_PROMPT_UNLOCK_PASSWORD_FILE = 51;
+	private static final int STRING_LEAVE_BLANK = 52;
 
 	private static Map<Integer,String> getLanguageStringsKorean()
 	{
@@ -579,6 +580,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_SECONDS, "초");
 		map.put(STRING_DAYS, "일");
 		map.put(STRING_YEARS, "년");
+		map.put(STRING_LEAVE_BLANK, "현재 비밀번호를 유지하도록 비워 두십시오");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "비밀번호 관리자 설정");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "비밀번호 설경");
@@ -655,6 +657,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_SECONDS, "secondes");
 		map.put(STRING_DAYS, "jours");
 		map.put(STRING_YEARS, "ans");
+		map.put(STRING_LEAVE_BLANK, "Laisser vide pour garder mot de passe actuel");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Détails du mot de passe");
@@ -735,6 +738,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_SECONDS, "seconds");
 		map.put(STRING_DAYS, "days");
 		map.put(STRING_YEARS, "years");
+		map.put(STRING_LEAVE_BLANK, "Leave blank to keep current password");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Password Manager Configuration");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Password Details");
@@ -813,6 +817,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_SECONDS, "saat");
 		map.put(STRING_DAYS, "hari");
 		map.put(STRING_YEARS, "tahun");
+		map.put(STRING_LEAVE_BLANK, "Biarkan kosong untuk menyimpan kata laluan semasa");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Konfigurasi Pengurus Kata Laluan");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Butiran Kata Laluan");
@@ -2129,7 +2134,8 @@ public class PasswordManager extends JFrame
 		JPasswordField passFieldConfirm = new JPasswordField(23);
 		JButton buttonConfirm = new JButton(iconConfirm64);
 
-		buttonConfirm.setBackground(colorConfirm);
+		buttonConfirm.setBackground(colorFrame);
+		buttonConfirm.setBorder(null);
 
 		labelOldPassword.setFont(fontLabel);
 		labelPassword.setFont(fontLabel);
@@ -2645,7 +2651,9 @@ public class PasswordManager extends JFrame
 		tfPassLen.setPreferredSize(tfSize);
 
 		JButton buttonConfirm = new JButton(iconConfirm64);
-		buttonConfirm.setBackground(colorConfirm);
+
+		buttonConfirm.setBackground(colorFrame);
+		buttonConfirm.setBorder(null);
 
 		final int halfWidth = (windowWidth/2);
 		final int leftOffset = (halfWidth - 200);
@@ -2819,7 +2827,7 @@ public class PasswordManager extends JFrame
 
 
 
-	private void doChangePassword()
+	private void doChangeDetails()
 	{
 		if (null == passwordEntryList)
 		{
@@ -2833,10 +2841,12 @@ public class PasswordManager extends JFrame
 			return;
 		}
 
+/*
 		int action = showQuestionDialog(currentLanguage.get(STRING_PROMPT_PASSWORD_WILL_BE_CHANGED));
 
 		if (JOptionPane.CANCEL_OPTION == action)
 			return;
+*/
 
 		JFrame frame = new JFrame();
 		Container contentPane = frame.getContentPane();
@@ -2863,7 +2873,7 @@ public class PasswordManager extends JFrame
 
 		JLabel labelId = new JLabel(currentLanguage.get(STRING_PASSWORD_ID));
 		JLabel labelUsername = new JLabel(currentLanguage.get(STRING_USERNAME));
-		JLabel labelPasswordLen = new JLabel(currentLanguage.get(STRING_PASSWORD_LENGTH));
+		JLabel labelPasswordLen = new JLabel(currentLanguage.get(STRING_PASSWORD_LENGTH) + " (" + currentLanguage.get(STRING_LEAVE_BLANK) + ")");
 
 		labelId.setFont(fontLabel);
 		labelUsername.setFont(fontLabel);
@@ -2883,14 +2893,16 @@ public class PasswordManager extends JFrame
 		tfPasswordLen.setPreferredSize(sizeTextField);
 
 		JButton buttonConfirm = new JButton(iconConfirm64);
-		buttonConfirm.setBackground(colorConfirm);
+
+		buttonConfirm.setBackground(colorFrame);
+		buttonConfirm.setBorder(null);
 
 		spring.putConstraint(SpringLayout.WEST, containerIconLocked, ((windowWidth/2) - (iconLocked128.getIconWidth()/2)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, containerIconLocked, north, SpringLayout.NORTH, contentPane);
 
 		north += iconLocked128.getIconHeight() + 60;
 
-		spring.putConstraint(SpringLayout.WEST, labelId, 80, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, labelId, 40, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelId, north, SpringLayout.NORTH, contentPane);
 
 		north += 30;
@@ -2900,7 +2912,7 @@ public class PasswordManager extends JFrame
 
 		north += 50;
 
-		spring.putConstraint(SpringLayout.WEST, labelUsername, 80, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, labelUsername, 40, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelUsername, north, SpringLayout.NORTH, contentPane);
 
 		north += 30;
@@ -2910,7 +2922,7 @@ public class PasswordManager extends JFrame
 
 		north += 50;
 
-		spring.putConstraint(SpringLayout.WEST, labelPasswordLen, 80, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, labelPasswordLen, 40, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelPasswordLen, north, SpringLayout.NORTH, contentPane);
 
 		north += 30;
@@ -2936,12 +2948,16 @@ public class PasswordManager extends JFrame
 			@Override
 			public void actionPerformed(ActionEvent event)
 			{
-				String passLen = tfPasswordLen.getText();
+				String passLenStr = tfPasswordLen.getText();
+				int passLen = Integer.parseInt(passLenStr);
 
-				if (false == isValidLength(passLen))
+				if (0 != passLen)
 				{
-					showErrorDialog(currentLanguage.get(STRING_ERROR_INVALID_PASSWORD_LENGTH));
-					return;
+					if (false == isValidLength(passLenStr))
+					{
+						showErrorDialog(currentLanguage.get(STRING_ERROR_INVALID_PASSWORD_LENGTH));
+						return;
+					}
 				}
 
 /*
@@ -2968,12 +2984,18 @@ public class PasswordManager extends JFrame
 
 				String newId = tfId.getText();
 				String newUsername = tfUsername.getText();
-				String oldPass = entry.getPassword();
-				String newPass = createNewPassword(Integer.parseInt(passLen));
+				String oldPass = null;
+				String newPass = null;
+
+				if (0 != passLen)
+				{
+					oldPass = entry.getPassword();
+					newPass = createNewPassword(passLen);
+					entry.setPassword(newPass);
+				}
 
 				entry.setId(newId);
 				entry.setUsername(newUsername);
-				entry.setPassword(newPass);
 				entry.setTimestamp(System.currentTimeMillis());
 
 				currentlySelected.setText(newId);
@@ -2981,7 +3003,11 @@ public class PasswordManager extends JFrame
 				putPasswordEntries();
 				revalidate();
 
-				showChangedDetails(entry.getId(), entry.getUsername(), oldPass, newPass, entry.getTimestamp());
+				if (null == newPass)
+					showPasswordDetailsForId(entry.getId());
+				else
+					showChangedDetails(entry.getId(), entry.getUsername(), oldPass, newPass, entry.getTimestamp());
+
 				frame.dispose();
 			}
 		});
@@ -3521,7 +3547,7 @@ public class PasswordManager extends JFrame
 			@Override
 			public void actionPerformed(ActionEvent event)
 			{
-				doChangePassword();
+				doChangeDetails();
 			}
 		});
 	}
@@ -3551,8 +3577,8 @@ public class PasswordManager extends JFrame
 		JScrollPane scrollPane = new JScrollPane(buttonGrid, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		JButton buttonConfirm = new JButton(iconConfirm64);
 
+		buttonConfirm.setBackground(colorFrame);
 		buttonConfirm.setBorder(null);
-		buttonConfirm.setBackground(new Color(240, 240, 240));
 
 		scrollPane.setPreferredSize(new Dimension(scrollPaneWidth, scrollPaneHeight));
 
