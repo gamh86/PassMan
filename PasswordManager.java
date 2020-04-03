@@ -2852,8 +2852,10 @@ public class PasswordManager extends JFrame
 		Container contentPane = frame.getContentPane();
 		SpringLayout spring = new SpringLayout();
 		int north = 40;
-		final int windowWidth = 550;
+		final int windowWidth = 650;
 		final int windowHeight = 650;
+		final int tfWidth = 500;
+		final int tfHeight = 30;
 
 		assert(null != currentlySelected);
 		PasswordEntry entry = findPasswordForId(currentlySelected.getText());
@@ -2883,11 +2885,12 @@ public class PasswordManager extends JFrame
 		JTextField tfUsername = new JTextField(entry.getUsername());
 		JTextField tfPasswordLen = new JTextField();
 
-		Dimension sizeTextField = new Dimension(400, 30);
+		Dimension sizeTextField = new Dimension(tfWidth, tfHeight);
 
 		tfId.setFont(fontInput);
 		tfUsername.setFont(fontInput);
 		tfPasswordLen.setFont(fontInput);
+
 		tfId.setPreferredSize(sizeTextField);
 		tfUsername.setPreferredSize(sizeTextField);
 		tfPasswordLen.setPreferredSize(sizeTextField);
@@ -2907,7 +2910,7 @@ public class PasswordManager extends JFrame
 
 		north += 30;
 
-		spring.putConstraint(SpringLayout.WEST, tfId, 80, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, tfId, ((windowWidth>>1) - (tfWidth>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, tfId, north, SpringLayout.NORTH, contentPane);
 
 		north += 50;
@@ -2917,7 +2920,7 @@ public class PasswordManager extends JFrame
 
 		north += 30;
 
-		spring.putConstraint(SpringLayout.WEST, tfUsername, 80, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, tfUsername, ((windowWidth>>1) - (tfWidth>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, tfUsername, north, SpringLayout.NORTH, contentPane);
 
 		north += 50;
@@ -2927,7 +2930,7 @@ public class PasswordManager extends JFrame
 
 		north += 30;
 
-		spring.putConstraint(SpringLayout.WEST, tfPasswordLen, 80, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, tfPasswordLen, ((windowWidth>>1) - (tfWidth>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, tfPasswordLen, north, SpringLayout.NORTH, contentPane);
 
 		north += 80;
@@ -2949,7 +2952,17 @@ public class PasswordManager extends JFrame
 			public void actionPerformed(ActionEvent event)
 			{
 				String passLenStr = tfPasswordLen.getText();
-				int passLen = Integer.parseInt(passLenStr);
+				int passLen = 0;
+
+				if (passLenStr.length() == 0)
+				{
+					passLen = 0;
+				}
+				else
+				{
+					//System.out.println("passLenStr != null and != \"\": " + passLenStr + " - " + passLenStr.length());
+					passLen = Integer.parseInt(passLenStr);
+				}
 
 				if (0 != passLen)
 				{
