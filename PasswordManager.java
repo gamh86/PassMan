@@ -3062,10 +3062,10 @@ public class PasswordManager extends JFrame
 		JLabel containerIcon = new JLabel(icon);
 		JTextArea taInfo = new JTextArea(currentLanguage.get(STRING_PROMPT_UNLOCK_PASSWORD_FILE));
 
-		final int windowWidth = 600;
-		final int windowHeight = 550;
-		final int passFieldWidth = 350;
-		final int passFieldHeight = 30;
+		final int windowWidth = 700;
+		final int windowHeight = 350;
+		final int passFieldWidth = 600;
+		final int passFieldHeight = 32;
 		//final int taInfoWidth = 550;
 		//final int taInfoHeight = 150;
 		Dimension sizePassField = new Dimension(passFieldWidth, passFieldHeight);
@@ -3095,22 +3095,22 @@ public class PasswordManager extends JFrame
 		int iconWidth = icon.getIconWidth();
 		int iconHeight = icon.getIconHeight();
 
-		spring.putConstraint(SpringLayout.WEST, containerIcon, ((windowWidth>>1) - (iconWidth>>1)), SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, containerIcon, 50, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, containerIcon, north, SpringLayout.NORTH, contentPane);
 
-		north += iconHeight + 60;
+		north += (iconHeight/3);
 
-		spring.putConstraint(SpringLayout.WEST, taInfo, 80, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, taInfo, 50 + iconWidth + 40, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, taInfo, north, SpringLayout.NORTH, contentPane);
 
-		north += 100;
+		north += ((iconHeight/3)<<1)+30;
 
-		spring.putConstraint(SpringLayout.WEST, passField, ((windowWidth/2) - (passFieldWidth/2)), SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, passField, ((windowWidth>>1) - (passFieldWidth>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, passField, north, SpringLayout.NORTH, contentPane);
 
-		north += 80;
+		north += 50;
 
-		spring.putConstraint(SpringLayout.WEST, buttonConfirm, ((windowWidth/2) - (iconConfirm64.getIconWidth()/2)), SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, buttonConfirm, ((windowWidth>>1) - (iconConfirm64.getIconWidth()>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, buttonConfirm, north, SpringLayout.NORTH, contentPane);
 
 		contentPane.add(containerIcon);
