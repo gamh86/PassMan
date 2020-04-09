@@ -396,7 +396,7 @@ public class PasswordManager extends JFrame
 
 	private Color colorButtonSelected = new Color(230, 243, 255);
 	private Color colorButtonDeselected = new Color(215, 215, 215);
-	private Color colorConfirm = new Color(240, 255, 230);
+	private Color colorConfirm = new Color(220, 220, 220);
 	private Color colorFrame = new Color(240, 240, 240);
 
 
@@ -1189,7 +1189,8 @@ public class PasswordManager extends JFrame
 				"|" + entry.getUsername() +
 				"|" + entry.getPassword() +
 				"|" + entry.getPassword().length() +
-				"|" + entry.getTimestamp();
+				"|" + entry.getTimestamp() +
+				"|" + entry.getSizeCharacterSet();
 
 			outContents += line + "\n";
 		}
@@ -1227,12 +1228,7 @@ public class PasswordManager extends JFrame
 	 */
 	private void getFileContents(String path)
 	{
-		if (null == password)
-		{
-			// XXX unlockPasswordFile() calls setupGUI() on successfully decrypting the file...
-			unlockPasswordFile();
-			return;
-		}
+		assert(null != password);
 
 		try
 		{
@@ -1437,15 +1433,27 @@ public class PasswordManager extends JFrame
 			while (rawLine[pos] != (byte)'|' && pos < rawLine.length)
 				++pos;
 
+		/*
+		 * Skip past the length field.
+		 */
 			start = ++pos;
-			pos = rawLine.length;
+			while (rawLine[pos] != (byte)'|' && pos < rawLine.length)
+				++pos;
 
 			byte[] rawTimestamp = new byte[pos - start];
 			System.arraycopy(rawLine, start, rawTimestamp, 0, pos - start);
 
 			String strTimestamp = new String(rawTimestamp);
 
-			PasswordEntry entry = new PasswordEntry(new String(rawId), new String(rawUsername), new String(rawPassword), Long.parseLong(strTimestamp, 10));
+			start = ++pos;
+			pos = rawLine.length;
+
+			byte[] rawSizeCharSet = new byte[pos - start];
+			System.arraycopy(rawLine, start, rawSizeCharSet, 0, pos - start);
+
+			String sizeCharSetString = new String(rawSizeCharSet);
+
+			PasswordEntry entry = new PasswordEntry(new String(rawId), new String(rawUsername), new String(rawPassword), Long.parseLong(strTimestamp, 10), Integer.parseInt(sizeCharSetString));
 			passwordEntryList.add(entry);
 		}
 
@@ -1514,14 +1522,14 @@ public class PasswordManager extends JFrame
 		double INSTRUCTIONS_PER_ATTEMPT = 5.0;
 		double ATTEMPTS_PER_SECOND = (INSTRUCTIONS_PER_SECOND / INSTRUCTIONS_PER_ATTEMPT);
 
-		double nrPermutations = Math.pow((double)93.00, (double)password.length());
+		double nrPermutations = Math.pow((double)characterSet.size(), (double)password.length());
 
 	/*
 	 * On average, one crack a password after testing half.
 	 */
 		double secondsToCrack = (nrPermutations/2) / ATTEMPTS_PER_SECOND;
 		double daysToCrack = secondsToCrack / (double)SECONDS_PER_DAY;
-		double weeksToCrack = secondsToCrack / (double)SECONDS_PER_WEEK;
+		//double weeksToCrack = secondsToCrack / (double)SECONDS_PER_WEEK;
 		double yearsToCrack = secondsToCrack / SECONDS_PER_YEAR;
 
 		JTextField tfPermutations = new JTextField(String.format("%6.3e", nrPermutations));
@@ -2280,7 +2288,7 @@ public class PasswordManager extends JFrame
 		JPasswordField passFieldConfirm = new JPasswordField(23);
 		JButton buttonConfirm = new JButton(iconConfirm64);
 
-		buttonConfirm.setBackground(colorFrame);
+		buttonConfirm.setBackground(colorConfirm);
 		buttonConfirm.setBorder(null);
 
 		labelOldPassword.setFont(fontLabel);
@@ -2691,7 +2699,7 @@ public class PasswordManager extends JFrame
 
 		taInfo.setFont(fontLabel);
 		taInfo.setEditable(false);
-		taInfo.setBackground(new Color(240, 240, 240));
+		taInfo.setBackground(colorFrame);
 
 		JLabel labelPass = new JLabel(currentLanguage.get(STRING_PASSWORD));
 		JLabel labelConfirm = new JLabel(currentLanguage.get(STRING_CONFIRM_PASSWORD));
@@ -2702,8 +2710,8 @@ public class PasswordManager extends JFrame
 		passField.setFont(fontInput);
 		passFieldConfirm.setFont(fontInput);
 
-		JButton buttonOk = new JButton(iconConfirm64);
-		buttonOk.setBackground(Color.WHITE);
+		JButton buttonConfirm = new JButton(iconConfirm64);
+		buttonConfirm.setBackground(Color.WHITE);
 		//buttonOk.setBackground(new Color(135, 255, 175)); // 0x87ffaf
 
 		int widthHalf = (frameWidth/2);
@@ -2727,8 +2735,8 @@ public class PasswordManager extends JFrame
 		spring.putConstraint(SpringLayout.WEST, passFieldConfirm, leftOffset, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, passFieldConfirm, 435, SpringLayout.NORTH, contentPane);
 
-		spring.putConstraint(SpringLayout.WEST, buttonOk, (widthHalf - (iconConfirm64.getIconWidth()/2) - 10), SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, buttonOk, 505, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.WEST, buttonConfirm, (widthHalf - (iconConfirm64.getIconWidth()/2) - 10), SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, buttonConfirm, 505, SpringLayout.NORTH, contentPane);
 
 		contentPane.add(iconContainer);
 		contentPane.add(taInfo);
@@ -2736,9 +2744,14 @@ public class PasswordManager extends JFrame
 		contentPane.add(passField);
 		contentPane.add(labelConfirm);
 		contentPane.add(passFieldConfirm);
-		contentPane.add(buttonOk);
+		contentPane.add(buttonConfirm);
 
-		buttonOk.addActionListener(new ActionListener() {
+		getRootPane().setDefaultButton(buttonConfirm);
+
+		setLocationRelativeTo(null);
+		setVisible(true);
+
+		buttonConfirm.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event)
 			{
@@ -2773,13 +2786,19 @@ public class PasswordManager extends JFrame
 				}
 
 				showInfoDialog(currentLanguage.get(STRING_PROMPT_PASSWORD_FILE_CREATED));
+
+				contentPane.remove(iconContainer);
+				contentPane.remove(taInfo);
+				contentPane.remove(labelPass);
+				contentPane.remove(passField);
+				contentPane.remove(labelConfirm);
+				contentPane.remove(passFieldConfirm);
+				contentPane.remove(buttonConfirm);
+
 				dispose();
 				setupGUI();
 			}
 		});
-
-		setLocationRelativeTo(null);
-		setVisible(true);
 	}
 
 	/**
@@ -2799,36 +2818,37 @@ public class PasswordManager extends JFrame
 		contentPane.setLayout(spring);
 
 		JLabel padlockContainer = new JLabel(iconLocked128);
-
-// XXX
-		//JLabel labelId = new JLabel("Password ID (e.g., gmail_account)");
-		//JLabel labelUsername = new JLabel("Username (e.g., john_smith)");
-		//JLabel labelPassLen = new JLabel("Password Length (min. 8, max. 100)");
-
 		JLabel labelId = new JLabel(currentLanguage.get(STRING_PASSWORD_ID));
 		JLabel labelUsername = new JLabel(currentLanguage.get(STRING_USERNAME));
 		JLabel labelPassLen = new JLabel(currentLanguage.get(STRING_PASSWORD_LENGTH));
+		JLabel labelPassword = new JLabel("Password");
 
 		labelId.setFont(fontLabel);
 		labelUsername.setFont(fontLabel);
 		labelPassLen.setFont(fontLabel);
+		labelPassword.setFont(fontLabel);
 
 		JTextField tfId = new JTextField("");
 		JTextField tfUsername = new JTextField("");
 		JTextField tfPassLen = new JTextField("");
+		JTextField tfPassword = new JTextField("");
 
 		tfId.setFont(fontInput);
 		tfUsername.setFont(fontInput);
 		tfPassLen.setFont(fontInput);
+		tfPassword.setFont(fontInput);
 
 		Dimension tfSize = new Dimension(400, 30);
 		tfId.setPreferredSize(tfSize);
 		tfUsername.setPreferredSize(tfSize);
 		tfPassLen.setPreferredSize(tfSize);
+		tfPassword.setPreferredSize(tfSize);
+
+		JCheckBox checkbox = new JCheckBox("Generate Random");
 
 		JButton buttonConfirm = new JButton(iconConfirm64);
 
-		buttonConfirm.setBackground(colorFrame);
+		buttonConfirm.setBackground(colorConfirm);
 		buttonConfirm.setBorder(null);
 
 		final int halfWidth = (windowWidth/2);
@@ -2860,6 +2880,20 @@ public class PasswordManager extends JFrame
 
 		north += 60;
 
+		spring.putConstraint(SpringLayout.WEST, labelPassword, leftOffset, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, labelPassword, north, SpringLayout.NORTH, contentPane);
+
+		spring.putConstraint(SpringLayout.WEST, checkbox, leftOffset + 100, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, checkbox, north, SpringLayout.NORTH, contentPane);
+
+		north += 30;
+
+		spring.putConstraint(SpringLayout.WEST, tfPassword, leftOffset, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, tfPassword, north, SpringLayout.NORTH, contentPane);
+
+		north += 60;
+		int passLenSaveNorth = north;
+
 		spring.putConstraint(SpringLayout.WEST, labelPassLen, leftOffset, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelPassLen, north, SpringLayout.NORTH, contentPane);
 
@@ -2868,7 +2902,7 @@ public class PasswordManager extends JFrame
 		spring.putConstraint(SpringLayout.WEST, tfPassLen, leftOffset, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, tfPassLen, north, SpringLayout.NORTH, contentPane);
 
-		north += 80;
+		north += 60;
 
 		spring.putConstraint(SpringLayout.WEST, buttonConfirm, (halfWidth - (iconConfirm64.getIconWidth()/2) - 20), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, buttonConfirm, north, SpringLayout.NORTH, contentPane);
@@ -2878,32 +2912,97 @@ public class PasswordManager extends JFrame
 		contentPane.add(tfId);
 		contentPane.add(labelUsername);
 		contentPane.add(tfUsername);
-		contentPane.add(labelPassLen);
-		contentPane.add(tfPassLen);
+		contentPane.add(labelPassword);
+		contentPane.add(tfPassword);
+		contentPane.add(checkbox);
+		//contentPane.add(labelPassLen);
+		//contentPane.add(tfPassLen);
 		contentPane.add(buttonConfirm);
+
+		frame.getRootPane().setDefaultButton(buttonConfirm);
+
+		frame.addWindowFocusListener(new WindowAdapter() {
+			@Override
+			public void windowGainedFocus(WindowEvent event)
+			{
+				tfId.requestFocusInWindow();
+			}
+		});
 
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
+
+		checkbox.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				boolean isSelected = checkbox.isSelected();
+
+				if (true == isSelected)
+				{
+					tfPassword.setEditable(false);
+
+					spring.putConstraint(SpringLayout.WEST, labelPassLen, leftOffset, SpringLayout.WEST, contentPane);
+					spring.putConstraint(SpringLayout.NORTH, labelPassLen, passLenSaveNorth, SpringLayout.NORTH, contentPane);
+
+					spring.putConstraint(SpringLayout.WEST, tfPassLen, leftOffset, SpringLayout.WEST, contentPane);
+					spring.putConstraint(SpringLayout.NORTH, tfPassLen, passLenSaveNorth + 30, SpringLayout.NORTH, contentPane);
+
+					contentPane.add(labelPassLen);
+					contentPane.add(tfPassLen);
+				}
+				else
+				{
+					tfPassword.setEditable(true);
+					contentPane.remove(labelPassLen);
+					contentPane.remove(tfPassLen);
+				}
+
+				frame.revalidate();
+				frame.repaint();
+
+				return;
+			}
+		});
 
 		buttonConfirm.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event)
 			{
-				if (false == isValidLength(tfPassLen.getText()))
+				boolean usingRandomGenerator = checkbox.isSelected();
+				String newPassword = null;
+
+				if (true == usingRandomGenerator)
 				{
-					showErrorDialog(currentLanguage.get(STRING_ERROR_INVALID_PASSWORD_LENGTH));
-					return;
+					if (false == isValidLength(tfPassLen.getText()))
+					{
+						showErrorDialog(currentLanguage.get(STRING_ERROR_INVALID_PASSWORD_LENGTH));
+						return;
+					}
+
+					if (true == passwordIdExists(tfId.getText()))
+					{
+						showErrorDialog(currentLanguage.get(STRING_ERROR_PASSWORD_ID_EXISTS));
+						return;
+					}
+
+					int len = Integer.parseInt(tfPassLen.getText());
+					newPassword = createNewPassword(len);
+				}
+				else
+				{
+					int passwordLen = tfPassword.getText().length();
+
+					if (passwordLen < 8 || passwordLen > 100)
+					{
+						showErrorDialog(currentLanguage.get(STRING_ERROR_INVALID_PASSWORD_LENGTH));
+						return;
+					}
+
+					newPassword = tfPassword.getText();
 				}
 
-				if (true == passwordIdExists(tfId.getText()))
-				{
-					showErrorDialog(currentLanguage.get(STRING_ERROR_PASSWORD_ID_EXISTS));
-					return;
-				}
-
-				int len = Integer.parseInt(tfPassLen.getText());
-				String newPass = createNewPassword(len);
-				PasswordEntry newEntry = new PasswordEntry(tfId.getText(), tfUsername.getText(), newPass, System.currentTimeMillis());
+				PasswordEntry newEntry = new PasswordEntry(tfId.getText(), tfUsername.getText(), newPassword, System.currentTimeMillis(), characterSet.size());
 
 				if (true == fileContentsCached)
 				{
@@ -2936,7 +3035,7 @@ public class PasswordManager extends JFrame
 
 				setSelectedPasswordId(buttonShowDetails);
 
-				showPasswordDetails(tfId.getText(), tfUsername.getText(), newPass, newEntry.getTimestamp());
+				showPasswordDetails(tfId.getText(), tfUsername.getText(), newPassword, newEntry.getTimestamp());
 
 				revalidate();
 				frame.dispose();
@@ -3075,7 +3174,7 @@ public class PasswordManager extends JFrame
 
 		JButton buttonConfirm = new JButton(iconConfirm64);
 
-		buttonConfirm.setBackground(colorFrame);
+		buttonConfirm.setBackground(colorConfirm);
 		buttonConfirm.setBorder(null);
 
 		spring.putConstraint(SpringLayout.WEST, containerIconLocked, ((windowWidth/2) - (iconLocked128.getIconWidth()/2)), SpringLayout.WEST, contentPane);
@@ -3231,17 +3330,21 @@ public class PasswordManager extends JFrame
 		Container contentPane = getContentPane();
 		SpringLayout spring = new SpringLayout();
 
-		ImageIcon icon = iconLocked128;
+		ImageIcon icon = iconLocked64;
 		JPasswordField passField = new JPasswordField();
-		JButton buttonConfirm = new JButton(iconConfirm64);
+		JButton buttonConfirm = new JButton(currentLanguage.get(STRING_PROMPT_OK));
 		JLabel containerIcon = new JLabel(icon);
 		JTextArea taInfo = new JTextArea(currentLanguage.get(STRING_PROMPT_UNLOCK_PASSWORD_FILE));
 
-		final int windowWidth = 720;
-		final int windowHeight = 350;
-		final int passFieldWidth = 600;
-		final int passFieldHeight = 30;
+		final int windowWidth = 600;
+		final int windowHeight = 250;
+		final int passFieldWidth = 450;
+		final int passFieldHeight = 35;
+		final int buttonWidth = 80;
+		final int buttonHeight = 32;
+		final int combinedWidth = passFieldWidth + buttonWidth;
 		Dimension sizePassField = new Dimension(passFieldWidth, passFieldHeight);
+		Dimension sizeButtonConfirm = new Dimension(buttonWidth, buttonHeight);
 		int north = 0;
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -3250,8 +3353,9 @@ public class PasswordManager extends JFrame
 
 		contentPane.setLayout(spring);
 
-		buttonConfirm.setBackground(colorFrame);
-		buttonConfirm.setBorder(null);
+		//buttonConfirm.setBackground(colorConfirm);
+		//buttonConfirm.setBorder(null);
+		buttonConfirm.setPreferredSize(sizeButtonConfirm);
 
 		taInfo.setEditable(false);
 		taInfo.setBorder(null);
@@ -3267,20 +3371,18 @@ public class PasswordManager extends JFrame
 		int iconWidth = icon.getIconWidth();
 		int iconHeight = icon.getIconHeight();
 
-		spring.putConstraint(SpringLayout.WEST, containerIcon, 20, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, containerIcon, 40, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, containerIcon, north, SpringLayout.NORTH, contentPane);
 
-		spring.putConstraint(SpringLayout.WEST, taInfo, 20 + iconWidth + 40, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, taInfo, north + (iconHeight/3), SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.WEST, taInfo, 40 + iconWidth + 60, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, taInfo, north + 10, SpringLayout.NORTH, contentPane);
 
-		north += iconHeight + 40;
+		north += iconHeight + 30;
 
-		spring.putConstraint(SpringLayout.WEST, passField, ((windowWidth>>1) - (passFieldWidth>>1)), SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, passField, ((windowWidth-combinedWidth)>>1), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, passField, north, SpringLayout.NORTH, contentPane);
 
-		north += 45;
-
-		spring.putConstraint(SpringLayout.WEST, buttonConfirm, ((windowWidth>>1) - (iconConfirm64.getIconWidth()>>1)), SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, buttonConfirm, ((windowWidth-combinedWidth)>>1) + passFieldWidth, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, buttonConfirm, north, SpringLayout.NORTH, contentPane);
 
 		contentPane.add(containerIcon);
@@ -3361,6 +3463,21 @@ public class PasswordManager extends JFrame
 
 				fileContentsCached = true;
 				createPasswordEntryList();
+
+/* XXX Temporary
+ *
+				Iterator<PasswordEntry> iter = passwordEntryList.iterator();
+
+				while (iter.hasNext())
+				{
+					PasswordEntry entry = iter.next();
+					System.out.println(entry.getId());
+					System.out.println(entry.getUsername());
+					System.out.println(entry.getPassword());
+					System.out.println("Length: " + entry.getPassword().length());
+					System.out.println("==================================\n");
+				}
+*/
 
 				remove(containerIcon);
 				remove(taInfo);
@@ -3777,7 +3894,7 @@ public class PasswordManager extends JFrame
 		JScrollPane scrollPane = new JScrollPane(buttonGrid, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		JButton buttonConfirm = new JButton(iconConfirm64);
 
-		buttonConfirm.setBackground(colorFrame);
+		buttonConfirm.setBackground(colorConfirm);
 		buttonConfirm.setBorder(null);
 
 		scrollPane.setPreferredSize(new Dimension(scrollPaneWidth, scrollPaneHeight));
@@ -3963,24 +4080,28 @@ public class PasswordManager extends JFrame
 		private String pass;
 		private String username;
 		private long timestamp;
+		private int sizeCharacterSet; // so we can calculate stats in doAnalysePassword()
 
-		public PasswordEntry(String _id, String _username, String _pass, long stamp)
+		public PasswordEntry(String _id, String _username, String _pass, long stamp, int sizeCharSet)
 		{
 			id = _id;
 			username = _username;
 			pass = _pass;
 			timestamp = stamp;
+			sizeCharacterSet = sizeCharSet;
 		}
 
 		public String getId() { return id; }
 		public String getPassword() { return pass; }
 		public String getUsername() { return username; }
 		public long getTimestamp() { return timestamp; }
+		public int getSizeCharacterSet() { return sizeCharacterSet; }
 
 		public void setId(String newId) { id = newId; }
 		public void setPassword(String newPass) { pass = newPass; }
 		public void setUsername(String newUsername) { username = newUsername; }
 		public void setTimestamp(long newTimestamp) { timestamp = newTimestamp; }
+		public void setSizeCharacterSet(int size) { sizeCharacterSet = size; }
 	}
 
 	private class RightClickPopup extends JPanel
