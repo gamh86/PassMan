@@ -396,7 +396,7 @@ public class PasswordManager extends JFrame
 
 	private Color colorButtonSelected = new Color(230, 243, 255);
 	private Color colorButtonDeselected = new Color(215, 215, 215);
-	private Color colorConfirm = new Color(220, 220, 220);
+	private Color colorConfirm = Color.WHITE;//new Color(220, 220, 220);
 	private Color colorFrame = new Color(240, 240, 240);
 
 
@@ -558,6 +558,8 @@ public class PasswordManager extends JFrame
 	private static final int STRING_LEAVE_BLANK = 52;
 	private static final int STRING_CHARACTER_SET = 53;
 	private static final int STRING_TOGGLE_CHARACTER_SET = 54;
+	private static final int STRING_GENERATE_RANDOM = 55;
+	private static final int STRING_SIZE_CHARACTER_SET = 56;
 
 	private static Map<Integer,String> getLanguageStringsKorean()
 	{
@@ -591,6 +593,8 @@ public class PasswordManager extends JFrame
 		map.put(STRING_LEAVE_BLANK, "현재 비밀번호를 유지하도록 비워 두십시오");
 		map.put(STRING_CHARACTER_SET, "비밀번호 문자 세트");
 		map.put(STRING_TOGGLE_CHARACTER_SET, "비밀번호 문자 세트의 문자들을 전환할 수 있습니다");
+		map.put(STRING_GENERATE_RANDOM, "임의의 비밀번호 생성하기");
+		map.put(STRING_SIZE_CHARACTER_SET, "문자 세트 크기");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "비밀번호 관리자 설정");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "비밀번호 설경");
@@ -670,6 +674,8 @@ public class PasswordManager extends JFrame
 		map.put(STRING_LEAVE_BLANK, "Laisser vide pour garder mot de passe actuel");
 		map.put(STRING_CHARACTER_SET, "Jeu de caractères");
 		map.put(STRING_TOGGLE_CHARACTER_SET, "Basculer des caractères dans le jeu de caractères pour les mots de passe");
+		map.put(STRING_GENERATE_RANDOM, "En générer un au hasard");
+		map.put(STRING_SIZE_CHARACTER_SET, "Taille du jeu de caractères");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Détails du mot de passe");
@@ -753,6 +759,8 @@ public class PasswordManager extends JFrame
 		map.put(STRING_LEAVE_BLANK, "Leave blank to keep current password");
 		map.put(STRING_CHARACTER_SET, "Password character set");
 		map.put(STRING_TOGGLE_CHARACTER_SET, "Toggle characters in the password character set");
+		map.put(STRING_GENERATE_RANDOM, "Generate random");
+		map.put(STRING_SIZE_CHARACTER_SET, "Character set size");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Password Manager Configuration");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Password Details");
@@ -834,6 +842,8 @@ public class PasswordManager extends JFrame
 		map.put(STRING_LEAVE_BLANK, "Biarkan kosong untuk menyimpan kata laluan semasa");
 		map.put(STRING_CHARACTER_SET, "Set aksara aksara.");
 		map.put(STRING_TOGGLE_CHARACTER_SET, "Togol aksara dalam set aksara kata laluan");
+		map.put(STRING_GENERATE_RANDOM, "Menjana satu secara rawak");
+		map.put(STRING_SIZE_CHARACTER_SET, "Saiz set watak");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Konfigurasi Pengurus Kata Laluan");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Butiran Kata Laluan");
@@ -1464,13 +1474,13 @@ public class PasswordManager extends JFrame
 	 * XXX - May be better to just show this in the showdetails window...
 	 * Show information such as # possible permutations for length.
 	 */
-	private void doAnalysePassword(String password)
+	private void doAnalysePassword(PasswordEntry entry)
 	{
 		JFrame frame = new JFrame();
 		Container contentPane = frame.getContentPane();
 		SpringLayout spring = new SpringLayout();
 		final int windowWidth = 550;
-		final int windowHeight = 550;
+		final int windowHeight = 600;
 		final int labelWidth = 250;
 		final int labelHeight = 30;
 		final int SECONDS_PER_DAY = (60 * 60 * 24); // mean solar day
@@ -1487,6 +1497,7 @@ public class PasswordManager extends JFrame
 
 		JLabel labelPermutations = new JLabel(currentLanguage.get(STRING_POSSIBLE_PERMUTATIONS));
 		JLabel labelPasswordLen = new JLabel(currentLanguage.get(STRING_PASSWORD_LENGTH2));
+		JLabel labelSizeCharacterSet = new JLabel(currentLanguage.get(STRING_SIZE_CHARACTER_SET));
 		JLabel labelCrackTime = new JLabel(currentLanguage.get(STRING_CRACK_TIME));
 
 		JLabel _longestLabel = labelPermutations;
@@ -1497,13 +1508,19 @@ public class PasswordManager extends JFrame
 		if (labelCrackTime.getText().length() > _longestLabel.getText().length())
 			_longestLabel = labelCrackTime;
 
+		if (labelSizeCharacterSet.getText().length() > _longestLabel.getText().length())
+			_longestLabel = labelSizeCharacterSet;
+
 		int offsetLeftTextFields = getStringWidth(_longestLabel.getText()) + 60;
 
 		labelPermutations.setPreferredSize(sizeLabel);
 		labelPasswordLen.setPreferredSize(sizeLabel);
+		labelSizeCharacterSet.setPreferredSize(sizeLabel);
 		labelCrackTime.setPreferredSize(sizeLabel);
+
 		labelPermutations.setFont(fontLabel);
 		labelPasswordLen.setFont(fontLabel);
+		labelSizeCharacterSet.setFont(fontLabel);
 		labelCrackTime.setFont(fontLabel);
 
 		JTextArea taInfo = new JTextArea(currentLanguage.get(STRING_PASSWORD_STRENGTH_INFORMATION));
@@ -1522,7 +1539,7 @@ public class PasswordManager extends JFrame
 		double INSTRUCTIONS_PER_ATTEMPT = 5.0;
 		double ATTEMPTS_PER_SECOND = (INSTRUCTIONS_PER_SECOND / INSTRUCTIONS_PER_ATTEMPT);
 
-		double nrPermutations = Math.pow((double)characterSet.size(), (double)password.length());
+		double nrPermutations = Math.pow((double)entry.getSizeCharacterSet(), (double)entry.getPassword().length());
 
 	/*
 	 * On average, one crack a password after testing half.
@@ -1533,7 +1550,8 @@ public class PasswordManager extends JFrame
 		double yearsToCrack = secondsToCrack / SECONDS_PER_YEAR;
 
 		JTextField tfPermutations = new JTextField(String.format("%6.3e", nrPermutations));
-		JTextField tfPasswordLen = new JTextField(String.format("%d", password.length()));
+		JTextField tfPasswordLen = new JTextField(String.format("%d", entry.getPassword().length()));
+		JTextField tfSizeCharacterSet = new JTextField(String.format("%d", entry.getSizeCharacterSet()));
 		JTextField tfCrackTimeSeconds = new JTextField(String.format("%.3e " + currentLanguage.get(STRING_SECONDS), secondsToCrack));
 		JTextField tfCrackTimeDays = new JTextField(String.format("%.3e " + currentLanguage.get(STRING_DAYS), daysToCrack));
 		JTextField tfCrackTimeYears = new JTextField(String.format("%.3e " + currentLanguage.get(STRING_YEARS), yearsToCrack));
@@ -1545,6 +1563,10 @@ public class PasswordManager extends JFrame
 		tfPasswordLen.setEditable(false);
 		tfPasswordLen.setBorder(null);
 		tfPasswordLen.setFont(fontDetails);
+
+		tfSizeCharacterSet.setEditable(false);
+		tfSizeCharacterSet.setBorder(null);
+		tfSizeCharacterSet.setFont(fontDetails);
 
 		tfCrackTimeSeconds.setEditable(false);
 		tfCrackTimeSeconds.setBorder(null);
@@ -1572,6 +1594,14 @@ public class PasswordManager extends JFrame
 
 		spring.putConstraint(SpringLayout.WEST, tfPasswordLen, offsetLeftTextFields, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, tfPasswordLen, north, SpringLayout.NORTH, contentPane);
+
+		north += 40;
+
+		spring.putConstraint(SpringLayout.WEST, labelSizeCharacterSet, 30, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, labelSizeCharacterSet, north, SpringLayout.NORTH, contentPane);
+
+		spring.putConstraint(SpringLayout.WEST, tfSizeCharacterSet, offsetLeftTextFields, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, tfSizeCharacterSet, north, SpringLayout.NORTH, contentPane);
 
 		north += 40;
 
@@ -1609,6 +1639,8 @@ public class PasswordManager extends JFrame
 		contentPane.add(containerIcon);
 		contentPane.add(labelPasswordLen);
 		contentPane.add(tfPasswordLen);
+		contentPane.add(labelSizeCharacterSet);
+		contentPane.add(tfSizeCharacterSet);
 		contentPane.add(labelPermutations);
 		contentPane.add(tfPermutations);
 		contentPane.add(labelCrackTime);
@@ -1726,7 +1758,7 @@ public class PasswordManager extends JFrame
 			@Override
 			public void actionPerformed(ActionEvent event)
 			{
-				doAnalysePassword(tfPassword.getText());
+				doAnalysePassword(findPasswordForId(tfId.getText()));
 			}
 		});
 
@@ -1952,7 +1984,7 @@ public class PasswordManager extends JFrame
 			@Override
 			public void actionPerformed(ActionEvent event)
 			{
-				doAnalysePassword(tfPassword.getText());
+				doAnalysePassword(findPasswordForId(tfId.getText()));
 			}
 		});
 
@@ -2154,7 +2186,7 @@ public class PasswordManager extends JFrame
 			@Override
 			public void actionPerformed(ActionEvent event)
 			{
-				doAnalysePassword(tfPassword.getText());
+				doAnalysePassword(findPasswordForId(tfId.getText()));
 			}
 		});
 
@@ -2289,7 +2321,7 @@ public class PasswordManager extends JFrame
 		JButton buttonConfirm = new JButton(iconConfirm64);
 
 		buttonConfirm.setBackground(colorConfirm);
-		buttonConfirm.setBorder(null);
+		//buttonConfirm.setBorder(null);
 
 		labelOldPassword.setFont(fontLabel);
 		labelPassword.setFont(fontLabel);
@@ -2811,7 +2843,7 @@ public class PasswordManager extends JFrame
 		Container contentPane = frame.getContentPane();
 		SpringLayout spring = new SpringLayout();
 		final int windowWidth = 620;
-		final int windowHeight = 650;
+		final int windowHeight = 680;
 
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.setSize(windowWidth, windowHeight);
@@ -2821,7 +2853,7 @@ public class PasswordManager extends JFrame
 		JLabel labelId = new JLabel(currentLanguage.get(STRING_PASSWORD_ID));
 		JLabel labelUsername = new JLabel(currentLanguage.get(STRING_USERNAME));
 		JLabel labelPassLen = new JLabel(currentLanguage.get(STRING_PASSWORD_LENGTH));
-		JLabel labelPassword = new JLabel("Password");
+		JLabel labelPassword = new JLabel(currentLanguage.get(STRING_PASSWORD));
 
 		labelId.setFont(fontLabel);
 		labelUsername.setFont(fontLabel);
@@ -2844,12 +2876,12 @@ public class PasswordManager extends JFrame
 		tfPassLen.setPreferredSize(tfSize);
 		tfPassword.setPreferredSize(tfSize);
 
-		JCheckBox checkbox = new JCheckBox("Generate Random");
+		JCheckBox checkbox = new JCheckBox(currentLanguage.get(STRING_GENERATE_RANDOM));
 
 		JButton buttonConfirm = new JButton(iconConfirm64);
 
 		buttonConfirm.setBackground(colorConfirm);
-		buttonConfirm.setBorder(null);
+		//buttonConfirm.setBorder(null);
 
 		final int halfWidth = (windowWidth/2);
 		final int leftOffset = (halfWidth - 200);
@@ -3175,7 +3207,7 @@ public class PasswordManager extends JFrame
 		JButton buttonConfirm = new JButton(iconConfirm64);
 
 		buttonConfirm.setBackground(colorConfirm);
-		buttonConfirm.setBorder(null);
+		//buttonConfirm.setBorder(null);
 
 		spring.putConstraint(SpringLayout.WEST, containerIconLocked, ((windowWidth/2) - (iconLocked128.getIconWidth()/2)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, containerIconLocked, north, SpringLayout.NORTH, contentPane);
@@ -3338,7 +3370,7 @@ public class PasswordManager extends JFrame
 
 		final int windowWidth = 600;
 		final int windowHeight = 250;
-		final int passFieldWidth = 450;
+		final int passFieldWidth = 420;
 		final int passFieldHeight = 35;
 		final int buttonWidth = 80;
 		final int buttonHeight = 32;
@@ -3895,7 +3927,7 @@ public class PasswordManager extends JFrame
 		JButton buttonConfirm = new JButton(iconConfirm64);
 
 		buttonConfirm.setBackground(colorConfirm);
-		buttonConfirm.setBorder(null);
+		//buttonConfirm.setBorder(null);
 
 		scrollPane.setPreferredSize(new Dimension(scrollPaneWidth, scrollPaneHeight));
 
