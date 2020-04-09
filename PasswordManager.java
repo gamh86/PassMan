@@ -392,7 +392,7 @@ public class PasswordManager extends JFrame
 	private Font fontPasswordId = new Font("Verdana", Font.BOLD, 18);
 	private Font fontDialog = new Font("Verdana", Font.PLAIN, 20);
 	private Font fontInfo = new Font("Times New Roman", Font.PLAIN, 16);
-	private Font fontLargePrompt = new Font("Verdana", Font.BOLD, 28);
+	private Font fontLargePrompt = new Font("Verdana", Font.BOLD, 24);
 
 	private Color colorButtonSelected = new Color(230, 243, 255);
 	private Color colorButtonDeselected = new Color(215, 215, 215);
@@ -557,6 +557,7 @@ public class PasswordManager extends JFrame
 	private static final int STRING_PROMPT_UNLOCK_PASSWORD_FILE = 51;
 	private static final int STRING_LEAVE_BLANK = 52;
 	private static final int STRING_CHARACTER_SET = 53;
+	private static final int STRING_TOGGLE_CHARACTER_SET = 54;
 
 	private static Map<Integer,String> getLanguageStringsKorean()
 	{
@@ -589,6 +590,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_YEARS, "년");
 		map.put(STRING_LEAVE_BLANK, "현재 비밀번호를 유지하도록 비워 두십시오");
 		map.put(STRING_CHARACTER_SET, "비밀번호 문자 세트");
+		map.put(STRING_TOGGLE_CHARACTER_SET, "비밀번호 문자 세트의 문자들을 전환할 수 있습니다");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "비밀번호 관리자 설정");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "비밀번호 설경");
@@ -667,6 +669,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_YEARS, "ans");
 		map.put(STRING_LEAVE_BLANK, "Laisser vide pour garder mot de passe actuel");
 		map.put(STRING_CHARACTER_SET, "Jeu de caractères");
+		map.put(STRING_TOGGLE_CHARACTER_SET, "Basculer des caractères dans le jeu de caractères pour les mots de passe");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Détails du mot de passe");
@@ -749,6 +752,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_YEARS, "years");
 		map.put(STRING_LEAVE_BLANK, "Leave blank to keep current password");
 		map.put(STRING_CHARACTER_SET, "Password character set");
+		map.put(STRING_TOGGLE_CHARACTER_SET, "Toggle characters in the password character set");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Password Manager Configuration");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Password Details");
@@ -829,6 +833,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_YEARS, "tahun");
 		map.put(STRING_LEAVE_BLANK, "Biarkan kosong untuk menyimpan kata laluan semasa");
 		map.put(STRING_CHARACTER_SET, "Set aksara aksara.");
+		map.put(STRING_TOGGLE_CHARACTER_SET, "Togol aksara dalam set aksara kata laluan");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Konfigurasi Pengurus Kata Laluan");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Butiran Kata Laluan");
@@ -940,12 +945,17 @@ public class PasswordManager extends JFrame
 	private void showCharacterSet()
 	{
 		JFrame frame = new JFrame();
+		SpringLayout spring = new SpringLayout();
 		Container contentPane = frame.getContentPane();
 		final int windowWidth = 850;
 		final int windowHeight = 450;
+		final int buttonContainerWidth = (windowWidth - 50);
+		final int buttonContainerHeight = ((windowHeight>>2)*3);
+		final int leftOffset = ((windowWidth-buttonContainerWidth)>>1);
 		boolean on = true;
 
 		contentPane.setBackground(colorFrame);
+		contentPane.setLayout(spring);
 
 		frame.setSize(windowWidth, windowHeight);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -953,18 +963,32 @@ public class PasswordManager extends JFrame
 		JPanel panelTop = new JPanel(new FlowLayout());
 		JPanel panelButtonContainer = new JPanel(new FlowLayout());
 
-		contentPane.setLayout(new BorderLayout());
+		panelButtonContainer.setPreferredSize(new Dimension(buttonContainerWidth, buttonContainerHeight));
 
-		JTextArea taCharacterSetInfo = new JTextArea("Toggle characters that will be\nincluded in created passwords");
+		JTextArea taCharacterSetInfo = new JTextArea(currentLanguage.get(STRING_TOGGLE_CHARACTER_SET));
+
 		taCharacterSetInfo.setEditable(false);
 		taCharacterSetInfo.setBorder(null);
 		taCharacterSetInfo.setBackground(colorFrame);
 		taCharacterSetInfo.setFont(fontLargePrompt);
 
+		int north = 40;
+
+		spring.putConstraint(SpringLayout.WEST, panelTop, 30, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, panelTop, north, SpringLayout.NORTH, contentPane);
+
+		north += 100;
+
+		spring.putConstraint(SpringLayout.WEST, panelButtonContainer, leftOffset, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, panelButtonContainer, north, SpringLayout.NORTH, contentPane);
+
 		panelTop.add(taCharacterSetInfo);
 
 		for (byte b = (byte)0x21; b < (byte)0x7e; ++b)
 		{
+			if (b == (byte)'|')
+				continue;
+
 			on = characterStatusMap[(int)(b - (byte)0x21)];
 
 		/*
@@ -3213,14 +3237,11 @@ public class PasswordManager extends JFrame
 		JLabel containerIcon = new JLabel(icon);
 		JTextArea taInfo = new JTextArea(currentLanguage.get(STRING_PROMPT_UNLOCK_PASSWORD_FILE));
 
-		final int windowWidth = 700;
+		final int windowWidth = 720;
 		final int windowHeight = 350;
 		final int passFieldWidth = 600;
-		final int passFieldHeight = 32;
-		//final int taInfoWidth = 550;
-		//final int taInfoHeight = 150;
+		final int passFieldHeight = 30;
 		Dimension sizePassField = new Dimension(passFieldWidth, passFieldHeight);
-		//Dimension sizeTaInfo = new Dimension(taInfoWidth, taInfoHeight);
 		int north = 0;
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -3229,7 +3250,7 @@ public class PasswordManager extends JFrame
 
 		contentPane.setLayout(spring);
 
-		//buttonConfirm.setBackground();
+		buttonConfirm.setBackground(colorFrame);
 		buttonConfirm.setBorder(null);
 
 		taInfo.setEditable(false);
@@ -3246,18 +3267,18 @@ public class PasswordManager extends JFrame
 		int iconWidth = icon.getIconWidth();
 		int iconHeight = icon.getIconHeight();
 
-		spring.putConstraint(SpringLayout.WEST, containerIcon, 40, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, containerIcon, 20, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, containerIcon, north, SpringLayout.NORTH, contentPane);
 
-		spring.putConstraint(SpringLayout.WEST, taInfo, 40 + iconWidth + 40, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, taInfo, north, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.WEST, taInfo, 20 + iconWidth + 40, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, taInfo, north + (iconHeight/3), SpringLayout.NORTH, contentPane);
 
-		north += iconHeight + 50;
+		north += iconHeight + 40;
 
 		spring.putConstraint(SpringLayout.WEST, passField, ((windowWidth>>1) - (passFieldWidth>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, passField, north, SpringLayout.NORTH, contentPane);
 
-		north += 50;
+		north += 45;
 
 		spring.putConstraint(SpringLayout.WEST, buttonConfirm, ((windowWidth>>1) - (iconConfirm64.getIconWidth()>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, buttonConfirm, north, SpringLayout.NORTH, contentPane);
@@ -3267,6 +3288,15 @@ public class PasswordManager extends JFrame
 		contentPane.add(passField);
 		contentPane.add(buttonConfirm);
 
+		addWindowFocusListener(new WindowAdapter() {
+			@Override
+			public void windowGainedFocus(WindowEvent event)
+			{
+				passField.requestFocusInWindow();
+			}
+		});
+
+		getRootPane().setDefaultButton(buttonConfirm);
 		setLocationRelativeTo(null);
 		setVisible(true);
 
