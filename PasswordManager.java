@@ -380,6 +380,7 @@ public class PasswordManager extends JFrame
 	// in showSettings()
 	private JLabel labelMasterPassword = null;
 	private JLabel labelLanguage = null;
+	private JLabel labelCharacterSet = null;
 
 /*
  * Various global fonts/colours
@@ -468,6 +469,7 @@ public class PasswordManager extends JFrame
 
 	private static ImageIcon iconCopy32 = null;
 
+/*
 	private static final byte[] asciiChars = {
 		'!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/',
 		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?',
@@ -476,6 +478,10 @@ public class PasswordManager extends JFrame
 		'`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
 		'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '}', '~'
 	};
+*/
+
+	private static ArrayList<Byte> characterSet = null;
+	private boolean[] characterStatusMap = null;
 
 /*
  * Unmodifiable maps mapping constants
@@ -550,6 +556,7 @@ public class PasswordManager extends JFrame
 	private static final int STRING_ERROR_TOO_MANY_ATTEMPTS = 50;
 	private static final int STRING_PROMPT_UNLOCK_PASSWORD_FILE = 51;
 	private static final int STRING_LEAVE_BLANK = 52;
+	private static final int STRING_CHARACTER_SET = 53;
 
 	private static Map<Integer,String> getLanguageStringsKorean()
 	{
@@ -581,6 +588,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_DAYS, "일");
 		map.put(STRING_YEARS, "년");
 		map.put(STRING_LEAVE_BLANK, "현재 비밀번호를 유지하도록 비워 두십시오");
+		map.put(STRING_CHARACTER_SET, "비밀번호 문자 세트");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "비밀번호 관리자 설정");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "비밀번호 설경");
@@ -658,6 +666,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_DAYS, "jours");
 		map.put(STRING_YEARS, "ans");
 		map.put(STRING_LEAVE_BLANK, "Laisser vide pour garder mot de passe actuel");
+		map.put(STRING_CHARACTER_SET, "Jeu de caractères");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Détails du mot de passe");
@@ -739,6 +748,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_DAYS, "days");
 		map.put(STRING_YEARS, "years");
 		map.put(STRING_LEAVE_BLANK, "Leave blank to keep current password");
+		map.put(STRING_CHARACTER_SET, "Password character set");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Password Manager Configuration");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Password Details");
@@ -818,6 +828,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_DAYS, "hari");
 		map.put(STRING_YEARS, "tahun");
 		map.put(STRING_LEAVE_BLANK, "Biarkan kosong untuk menyimpan kata laluan semasa");
+		map.put(STRING_CHARACTER_SET, "Set aksara aksara.");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Konfigurasi Pengurus Kata Laluan");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Butiran Kata Laluan");
@@ -924,6 +935,115 @@ public class PasswordManager extends JFrame
 		iconInfo32 = new ImageIcon(info32);
 
 		iconCopy32 = new ImageIcon(copy32);
+	}
+
+	private void showCharacterSet()
+	{
+		JFrame frame = new JFrame();
+		Container contentPane = frame.getContentPane();
+		final int windowWidth = 850;
+		final int windowHeight = 450;
+		boolean on = true;
+
+		contentPane.setBackground(colorFrame);
+
+		frame.setSize(windowWidth, windowHeight);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+		JPanel panelTop = new JPanel(new FlowLayout());
+		JPanel panelButtonContainer = new JPanel(new FlowLayout());
+
+		contentPane.setLayout(new BorderLayout());
+
+		JTextArea taCharacterSetInfo = new JTextArea("Toggle characters that will be\nincluded in created passwords");
+		taCharacterSetInfo.setEditable(false);
+		taCharacterSetInfo.setBorder(null);
+		taCharacterSetInfo.setBackground(colorFrame);
+		taCharacterSetInfo.setFont(fontLargePrompt);
+
+		panelTop.add(taCharacterSetInfo);
+
+		for (byte b = (byte)0x21; b < (byte)0x7e; ++b)
+		{
+			on = characterStatusMap[(int)(b - (byte)0x21)];
+
+		/*
+		 * No string object constructor for creation of
+		 * a string from a single byte. So use an array
+		 * of length 1.
+		 */
+			byte[] _b = new byte[1];
+
+			_b[0] = b;
+
+			JButton button = new JButton(new String(_b));
+			button.addActionListener(new characterButtonListener());
+			button.setBackground(true == on ? colorButtonSelected : colorButtonDeselected);
+			panelButtonContainer.add(button);
+		}
+
+		contentPane.add(panelTop, BorderLayout.NORTH);
+		contentPane.add(panelButtonContainer, BorderLayout.CENTER);
+
+		frame.setLocationRelativeTo(null);
+		frame.setVisible(true);
+	}
+
+	/**
+	 * Fill the character set with characters in the range
+	 * (0x21,0x7e], excluding any unwanted characters
+	 * specified by the user.
+	 */
+	private void fillCharacterSet()
+	{
+		boolean on = true;
+		characterSet = new ArrayList<Byte>();
+
+		for (byte b = (byte)0x21; b < (byte)0x7e; ++b)
+		{
+			on = characterStatusMap[(int)(b - (byte)0x21)];
+
+			if (false == on)
+				continue;
+
+			characterSet.add(b);
+		}
+
+		return;
+	}
+
+	private void fillCharacterStatusMap()
+	{
+		int rangeSize = (int)(0x7e - 0x21);
+
+		for (int i = 0; i < rangeSize; ++i)
+		{
+			characterStatusMap[i] = true;
+		}
+
+		characterStatusMap[(int)((byte)'|' - (byte)0x21)] = false;
+	}
+
+	private class characterButtonListener implements ActionListener
+	{
+		@Override
+		public void actionPerformed(ActionEvent event)
+		{
+			JButton clickedButton = (JButton)event.getSource();
+			byte selectedCharacter = clickedButton.getText().getBytes()[0];
+			int index = (int)(selectedCharacter - (byte)0x21);
+			boolean currentStatus = characterStatusMap[index];
+			boolean newStatus;
+
+			if (selectedCharacter == (byte)'|') // this can never be used
+				return;
+
+			newStatus = !currentStatus;
+			clickedButton.setBackground(true == newStatus ? colorButtonSelected : colorButtonDeselected);
+			characterStatusMap[index] = newStatus;
+
+			fillCharacterSet();
+		}
 	}
 
 	private void showInfoDialog(String msg)
@@ -1115,12 +1235,14 @@ public class PasswordManager extends JFrame
 
 		byte[] randBytes = new byte[len];
 		byte[] rawPass = new byte[len];
-		int asciiLen = asciiChars.length;
+		int nrCharacters = characterSet.size();
+		int selectedIndex = 0;
 
 		new Random().nextBytes(randBytes);
 		for (int i = 0; i < len; ++i)
 		{
-			rawPass[i] = asciiChars[Math.abs(randBytes[i]) % asciiLen];
+			selectedIndex = Math.abs(randBytes[i]) % nrCharacters;
+			rawPass[i] = characterSet.get(selectedIndex);
 		}
 
 		return new String(rawPass, Charset.forName("UTF-8"));
@@ -2311,6 +2433,7 @@ public class PasswordManager extends JFrame
 			// in JFrame created in showSettings
 			labelMasterPassword.setText(currentLanguage.get(STRING_MASTER_PASSWORD));
 			labelLanguage.setText(currentLanguage.get(STRING_LANGUAGE));
+			labelCharacterSet.setText(currentLanguage.get(STRING_CHARACTER_SET));
 
 			// Refreshes the actual display
 			revalidate();
@@ -2352,11 +2475,11 @@ public class PasswordManager extends JFrame
 
 		JLabel containerSettingsIcon = new JLabel(iconSettings128);
 
-		final int windowWidth = 700;
+		final int windowWidth = 650;
 		final int windowHeight = 650;
 		final int scrollPaneWidth = 300;
 		final int scrollPaneHeight = 80;
-		int halfWidth = (windowWidth/2);
+		int halfWidth = (windowWidth>>1);
 		int north = 60;
 
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -2367,9 +2490,11 @@ public class PasswordManager extends JFrame
 // global vars
 		labelMasterPassword = new JLabel(currentLanguage.get(STRING_MASTER_PASSWORD));
 		labelLanguage = new JLabel(currentLanguage.get(STRING_LANGUAGE));
+		labelCharacterSet = new JLabel(currentLanguage.get(STRING_CHARACTER_SET));
 
 		labelMasterPassword.setFont(fontLabel);
 		labelLanguage.setFont(fontLabel);
+		labelCharacterSet.setFont(fontLabel);
 
 		JTextField tfMasterPassword = new JTextField(" **************** ");
 
@@ -2409,17 +2534,26 @@ public class PasswordManager extends JFrame
 		tfMasterPassword.setBorder(null);
 		tfMasterPassword.setEditable(false);
 
+		int iconWidth = iconEdit32.getIconWidth();
+		int iconHeight = iconEdit32.getIconHeight();
+		Dimension iconSize = new Dimension(iconWidth + 10, iconHeight + 10);
+
 		JButton buttonChangeMaster = new JButton(iconEdit32);
-		buttonChangeMaster.setBackground(new Color(240, 240, 240));
-		buttonChangeMaster.setPreferredSize(new Dimension(iconEdit32.getIconHeight() + 10, iconEdit32.getIconHeight() + 10));
+		buttonChangeMaster.setBackground(colorFrame);
+		buttonChangeMaster.setPreferredSize(iconSize);
 		buttonChangeMaster.setBorder(null);
 
 		JButton buttonChangeLanguage = new JButton(iconEdit32);
-		buttonChangeLanguage.setBackground(new Color(240, 240, 240));
-		buttonChangeLanguage.setPreferredSize(new Dimension(iconEdit32.getIconHeight() + 10, iconEdit32.getIconHeight() + 10));
+		buttonChangeLanguage.setBackground(colorFrame);
+		buttonChangeLanguage.setPreferredSize(iconSize);
 		buttonChangeLanguage.setBorder(null);
 
-		spring.putConstraint(SpringLayout.WEST, containerSettingsIcon, ((windowWidth/2) - (iconSettings128.getIconWidth()/2)), SpringLayout.WEST, contentPane);
+		JButton buttonAdjustCharacterSet = new JButton(iconEdit32);
+		buttonAdjustCharacterSet.setBackground(colorFrame);
+		buttonAdjustCharacterSet.setPreferredSize(iconSize);
+		buttonAdjustCharacterSet.setBorder(null);
+
+		spring.putConstraint(SpringLayout.WEST, containerSettingsIcon, ((windowWidth>>1) - (iconSettings128.getIconWidth()>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, containerSettingsIcon, north, SpringLayout.NORTH, contentPane);
 
 		north += iconSettings128.getIconHeight() + 60;
@@ -2430,7 +2564,7 @@ public class PasswordManager extends JFrame
 		spring.putConstraint(SpringLayout.WEST, tfMasterPassword, 240, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, tfMasterPassword, north+5, SpringLayout.NORTH, contentPane);
 
-		spring.putConstraint(SpringLayout.WEST, buttonChangeMaster, windowWidth - iconEdit32.getIconWidth() - 30, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, buttonChangeMaster, windowWidth - iconHeight - 30, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, buttonChangeMaster, north-8, SpringLayout.NORTH, contentPane);
 
 		north += 50;
@@ -2445,8 +2579,16 @@ public class PasswordManager extends JFrame
 
 		north += (scrollPaneHeight/2);
 
-		spring.putConstraint(SpringLayout.WEST, buttonChangeLanguage, windowWidth - iconEdit32.getIconWidth() - 30, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, buttonChangeLanguage, windowWidth - iconHeight - 30, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, buttonChangeLanguage, north, SpringLayout.NORTH, contentPane);
+
+		north += (scrollPaneHeight>>1) + 50;
+
+		spring.putConstraint(SpringLayout.WEST, labelCharacterSet, 20, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, labelCharacterSet, north, SpringLayout.NORTH, contentPane);
+
+		spring.putConstraint(SpringLayout.WEST, buttonAdjustCharacterSet, windowWidth - iconHeight - 30, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, buttonAdjustCharacterSet, north, SpringLayout.NORTH, contentPane);
 
 		contentPane.add(containerSettingsIcon);
 		contentPane.add(labelMasterPassword);
@@ -2455,6 +2597,8 @@ public class PasswordManager extends JFrame
 		contentPane.add(labelLanguage);
 		contentPane.add(scrollPane);
 		contentPane.add(buttonChangeLanguage);
+		contentPane.add(labelCharacterSet);
+		contentPane.add(buttonAdjustCharacterSet);
 
 		buttonChangeMaster.addActionListener(new ActionListener() {
 			@Override
@@ -2469,6 +2613,14 @@ public class PasswordManager extends JFrame
 			public void actionPerformed(ActionEvent event)
 			{
 				changeCurrentLanguage();
+			}
+		});
+
+		buttonAdjustCharacterSet.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				showCharacterSet();
 			}
 		});
 
@@ -3048,7 +3200,6 @@ public class PasswordManager extends JFrame
 		showPasswordDetailsForId(currentlySelected.getText());
 	}
 
-
 	private static int passwordAttempts = 0;
 
 	private void unlockPasswordFile()
@@ -3056,7 +3207,7 @@ public class PasswordManager extends JFrame
 		Container contentPane = getContentPane();
 		SpringLayout spring = new SpringLayout();
 
-		ImageIcon icon = iconSafe128;
+		ImageIcon icon = iconLocked128;
 		JPasswordField passField = new JPasswordField();
 		JButton buttonConfirm = new JButton(iconConfirm64);
 		JLabel containerIcon = new JLabel(icon);
@@ -3078,7 +3229,7 @@ public class PasswordManager extends JFrame
 
 		contentPane.setLayout(spring);
 
-		buttonConfirm.setBackground(colorFrame);
+		//buttonConfirm.setBackground();
 		buttonConfirm.setBorder(null);
 
 		taInfo.setEditable(false);
@@ -3095,15 +3246,13 @@ public class PasswordManager extends JFrame
 		int iconWidth = icon.getIconWidth();
 		int iconHeight = icon.getIconHeight();
 
-		spring.putConstraint(SpringLayout.WEST, containerIcon, 50, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, containerIcon, 40, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, containerIcon, north, SpringLayout.NORTH, contentPane);
 
-		north += (iconHeight/3);
-
-		spring.putConstraint(SpringLayout.WEST, taInfo, 50 + iconWidth + 40, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, taInfo, 40 + iconWidth + 40, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, taInfo, north, SpringLayout.NORTH, contentPane);
 
-		north += ((iconHeight/3)<<1)+30;
+		north += iconHeight + 50;
 
 		spring.putConstraint(SpringLayout.WEST, passField, ((windowWidth>>1) - (passFieldWidth>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, passField, north, SpringLayout.NORTH, contentPane);
@@ -3840,8 +3989,11 @@ public class PasswordManager extends JFrame
 	 * require greater than one byte of memory.
 	 */
 		specialLanguageList = new ArrayList<Map<Integer,String> >();
-
 		specialLanguageList.add(languageKorean);
+
+		characterStatusMap = new boolean[(int)(0x7e - 0x21)];
+		fillCharacterStatusMap();
+		fillCharacterSet();
 
 		userHome = System.getProperty("user.home");
 		userName = System.getProperty("user.name");
