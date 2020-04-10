@@ -70,14 +70,8 @@ import javax.swing.DefaultListSelectionModel;
 
 	Deal with window resizes.
 
-	Allow updating of specific details without having to change
-	the password.
-
 	Add a component indicating password staleness in the password
 	details frames.
-
-	(On pressing the change button, maybe show a window which
-	allows which field to change, id, username, password...)
 */
 
 class AESCrypt
@@ -560,6 +554,9 @@ public class PasswordManager extends JFrame
 	private static final int STRING_TOGGLE_CHARACTER_SET = 54;
 	private static final int STRING_GENERATE_RANDOM = 55;
 	private static final int STRING_SIZE_CHARACTER_SET = 56;
+	private static final int STRING_CHANGE_ID = 57;
+	private static final int STRING_CHANGE_USERNAME = 58;
+	private static final int STRING_CHANGE_PASSWORD = 59;
 
 	private static Map<Integer,String> getLanguageStringsKorean()
 	{
@@ -595,6 +592,9 @@ public class PasswordManager extends JFrame
 		map.put(STRING_TOGGLE_CHARACTER_SET, "비밀번호 문자 세트의 문자들을 전환할 수 있습니다");
 		map.put(STRING_GENERATE_RANDOM, "임의의 비밀번호 생성하기");
 		map.put(STRING_SIZE_CHARACTER_SET, "문자 세트 크기");
+		map.put(STRING_CHANGE_ID, "비밀번호 아이디 변경");
+		map.put(STRING_CHANGE_USERNAME, "사용자 이름 변경");
+		map.put(STRING_CHANGE_PASSWORD, "비밀번호 변경");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "비밀번호 관리자 설정");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "비밀번호 설경");
@@ -676,6 +676,9 @@ public class PasswordManager extends JFrame
 		map.put(STRING_TOGGLE_CHARACTER_SET, "Basculer des caractères dans le jeu de caractères pour les mots de passe");
 		map.put(STRING_GENERATE_RANDOM, "En générer un au hasard");
 		map.put(STRING_SIZE_CHARACTER_SET, "Taille du jeu de caractères");
+		map.put(STRING_CHANGE_ID, "Modifier ID");
+		map.put(STRING_CHANGE_USERNAME, "Modifier Pseudo");
+		map.put(STRING_CHANGE_PASSWORD, "Modifier Mot de Passe");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Détails du mot de passe");
@@ -761,6 +764,9 @@ public class PasswordManager extends JFrame
 		map.put(STRING_TOGGLE_CHARACTER_SET, "Toggle characters in the password character set");
 		map.put(STRING_GENERATE_RANDOM, "Generate random");
 		map.put(STRING_SIZE_CHARACTER_SET, "Character set size");
+		map.put(STRING_CHANGE_ID, "Modify ID");
+		map.put(STRING_CHANGE_USERNAME, "Modify Username");
+		map.put(STRING_CHANGE_PASSWORD, "Modify Password");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Password Manager Configuration");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Password Details");
@@ -844,6 +850,9 @@ public class PasswordManager extends JFrame
 		map.put(STRING_TOGGLE_CHARACTER_SET, "Togol aksara dalam set aksara kata laluan");
 		map.put(STRING_GENERATE_RANDOM, "Menjana satu secara rawak");
 		map.put(STRING_SIZE_CHARACTER_SET, "Saiz set watak");
+		map.put(STRING_CHANGE_ID, "Ubah kata laluan ID");
+		map.put(STRING_CHANGE_USERNAME, "Ubah lengguna");
+		map.put(STRING_CHANGE_PASSWORD, "Ubah kata laluan");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Konfigurasi Pengurus Kata Laluan");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Butiran Kata Laluan");
@@ -2876,7 +2885,7 @@ public class PasswordManager extends JFrame
 		tfPassLen.setPreferredSize(tfSize);
 		tfPassword.setPreferredSize(tfSize);
 
-		JCheckBox checkbox = new JCheckBox(currentLanguage.get(STRING_GENERATE_RANDOM));
+		JCheckBox checkbox = new JCheckBox(currentLanguage.get(STRING_GENERATE_RANDOM), false);
 
 		JButton buttonConfirm = new JButton(iconConfirm64);
 
@@ -3160,7 +3169,7 @@ public class PasswordManager extends JFrame
 		SpringLayout spring = new SpringLayout();
 		int north = 40;
 		final int windowWidth = 650;
-		final int windowHeight = 650;
+		final int windowHeight = 700;
 		final int tfWidth = 500;
 		final int tfHeight = 30;
 
@@ -3180,29 +3189,41 @@ public class PasswordManager extends JFrame
 
 		JLabel containerIconLocked = new JLabel(iconLocked128);
 
-		JLabel labelId = new JLabel(currentLanguage.get(STRING_PASSWORD_ID));
-		JLabel labelUsername = new JLabel(currentLanguage.get(STRING_USERNAME));
+		//JLabel labelId = new JLabel(currentLanguage.get(STRING_PASSWORD_ID));
+		//JLabel labelUsername = new JLabel(currentLanguage.get(STRING_USERNAME));
+		//JLabel labelPassword = new JLabel(currentLanguage.get(STRING_PASSWORD));
 		JLabel labelPasswordLen = new JLabel(currentLanguage.get(STRING_PASSWORD_LENGTH));
-		JLabel labelLeaveBlank = new JLabel(currentLanguage.get(STRING_LEAVE_BLANK));
+		//JLabel labelLeaveBlank = new JLabel(currentLanguage.get(STRING_LEAVE_BLANK));
 
-		labelId.setFont(fontLabel);
-		labelUsername.setFont(fontLabel);
+		//labelId.setFont(fontLabel);
+		//labelUsername.setFont(fontLabel);
+		//labelPassword.setFont(fontLabel);
 		labelPasswordLen.setFont(fontLabel);
-		labelLeaveBlank.setFont(new Font("Verdana", Font.PLAIN, 14));
+		//labelLeaveBlank.setFont(new Font("Verdana", Font.PLAIN, 14));
+
+		final int leftOffset = 80;
 
 		JTextField tfId = new JTextField(entry.getId());
 		JTextField tfUsername = new JTextField(entry.getUsername());
+		JTextField tfPassword = new JTextField();
 		JTextField tfPasswordLen = new JTextField();
 
 		Dimension sizeTextField = new Dimension(tfWidth, tfHeight);
 
 		tfId.setFont(fontInput);
 		tfUsername.setFont(fontInput);
+		tfPassword.setFont(fontInput);
 		tfPasswordLen.setFont(fontInput);
 
 		tfId.setPreferredSize(sizeTextField);
 		tfUsername.setPreferredSize(sizeTextField);
+		tfPassword.setPreferredSize(sizeTextField);
 		tfPasswordLen.setPreferredSize(sizeTextField);
+
+		JCheckBox checkModifyId = new JCheckBox(currentLanguage.get(STRING_CHANGE_ID), true);
+		JCheckBox checkModifyUsername = new JCheckBox(currentLanguage.get(STRING_CHANGE_USERNAME), true);
+		JCheckBox checkModifyPassword = new JCheckBox(currentLanguage.get(STRING_CHANGE_PASSWORD), true);
+		JCheckBox checkGenerateRandom = new JCheckBox(currentLanguage.get(STRING_GENERATE_RANDOM), false);
 
 		JButton buttonConfirm = new JButton(iconConfirm64);
 
@@ -3214,8 +3235,11 @@ public class PasswordManager extends JFrame
 
 		north += iconLocked128.getIconHeight() + 60;
 
-		spring.putConstraint(SpringLayout.WEST, labelId, 60, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, labelId, north, SpringLayout.NORTH, contentPane);
+		//spring.putConstraint(SpringLayout.WEST, labelId, 60, SpringLayout.WEST, contentPane);
+		//spring.putConstraint(SpringLayout.NORTH, labelId, north, SpringLayout.NORTH, contentPane);
+
+		spring.putConstraint(SpringLayout.WEST, checkModifyId, leftOffset, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, checkModifyId, north, SpringLayout.NORTH, contentPane);
 
 		north += 30;
 
@@ -3224,8 +3248,11 @@ public class PasswordManager extends JFrame
 
 		north += 50;
 
-		spring.putConstraint(SpringLayout.WEST, labelUsername, 60, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, labelUsername, north, SpringLayout.NORTH, contentPane);
+		//spring.putConstraint(SpringLayout.WEST, labelUsername, 60, SpringLayout.WEST, contentPane);
+		//spring.putConstraint(SpringLayout.NORTH, labelUsername, north, SpringLayout.NORTH, contentPane);
+
+		spring.putConstraint(SpringLayout.WEST, checkModifyUsername, leftOffset, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, checkModifyUsername, north, SpringLayout.NORTH, contentPane);
 
 		north += 30;
 
@@ -3234,13 +3261,25 @@ public class PasswordManager extends JFrame
 
 		north += 50;
 
-		spring.putConstraint(SpringLayout.WEST, labelPasswordLen, 60, SpringLayout.WEST, contentPane);
+		//spring.putConstraint(SpringLayout.WEST, labelPassword, 60, SpringLayout.WEST, contentPane);
+		//spring.putConstraint(SpringLayout.NORTH, labelPassword, north, SpringLayout.NORTH, contentPane);
+
+		spring.putConstraint(SpringLayout.WEST, checkModifyPassword, leftOffset, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, checkModifyPassword, north, SpringLayout.NORTH, contentPane);
+
+		spring.putConstraint(SpringLayout.WEST, checkGenerateRandom, leftOffset+(windowWidth/3), SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, checkGenerateRandom, north, SpringLayout.NORTH, contentPane);
+
+		north += 30;
+
+		spring.putConstraint(SpringLayout.WEST, tfPassword, ((windowWidth>>1) - (tfWidth>>1)), SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, tfPassword, north, SpringLayout.NORTH, contentPane);
+
+		north += 50;
+		int passLenSaveNorth = north;
+
+		spring.putConstraint(SpringLayout.WEST, labelPasswordLen, leftOffset, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelPasswordLen, north, SpringLayout.NORTH, contentPane);
-
-		north += 25;
-
-		spring.putConstraint(SpringLayout.WEST, labelLeaveBlank, 64, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, labelLeaveBlank, north, SpringLayout.NORTH, contentPane);
 
 		north += 30;
 
@@ -3253,88 +3292,193 @@ public class PasswordManager extends JFrame
 		spring.putConstraint(SpringLayout.NORTH, buttonConfirm, north, SpringLayout.NORTH, contentPane);
 
 		contentPane.add(containerIconLocked);
-		contentPane.add(labelId);
+		//contentPane.add(labelId);
 		contentPane.add(tfId);
-		contentPane.add(labelUsername);
+		contentPane.add(checkModifyId);
+		//contentPane.add(labelUsername);
 		contentPane.add(tfUsername);
-		contentPane.add(labelPasswordLen);
-		contentPane.add(labelLeaveBlank);
-		contentPane.add(tfPasswordLen);
+		contentPane.add(checkModifyUsername);
+		//contentPane.add(labelPassword);
+		contentPane.add(tfPassword);
+		contentPane.add(checkModifyPassword);
+		contentPane.add(checkGenerateRandom);
 		contentPane.add(buttonConfirm);
+
+		checkModifyId.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				boolean isSelected = ((JCheckBox)event.getSource()).isSelected();
+
+				if (true == isSelected)
+				{
+					tfId.setEditable(true);
+				}
+				else
+				{
+					tfId.setEditable(false);
+				}
+
+				return;
+			}
+		});
+
+		checkModifyUsername.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				boolean isSelected = ((JCheckBox)event.getSource()).isSelected();
+
+				if (true == isSelected)
+				{
+					tfUsername.setEditable(true);
+				}
+				else
+				{
+					tfUsername.setEditable(false);
+				}
+
+				return;
+			}
+		});
+
+		checkModifyPassword.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				boolean isSelected = ((JCheckBox)event.getSource()).isSelected();
+
+				if (true == isSelected)
+				{
+					tfPassword.setEditable(true);
+					checkGenerateRandom.setEnabled(true);
+				}
+				else
+				{
+					tfPassword.setEditable(false);
+					checkGenerateRandom.setSelected(false);
+					checkGenerateRandom.setEnabled(false);
+
+					contentPane.remove(labelPasswordLen);
+					contentPane.remove(tfPasswordLen);
+
+					frame.revalidate();
+					frame.repaint();
+				}
+
+				return;
+			}
+		});
+
+		checkGenerateRandom.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				boolean isSelected = ((JCheckBox)event.getSource()).isSelected();
+
+				if (true == isSelected)
+				{
+					spring.putConstraint(SpringLayout.WEST, labelPasswordLen, 60, SpringLayout.WEST, contentPane);
+					spring.putConstraint(SpringLayout.NORTH, labelPasswordLen, passLenSaveNorth, SpringLayout.NORTH, contentPane);
+
+					spring.putConstraint(SpringLayout.WEST, tfPasswordLen, ((windowWidth>>1) - (tfWidth>>1)), SpringLayout.WEST, contentPane);
+					spring.putConstraint(SpringLayout.NORTH, tfPasswordLen, passLenSaveNorth + 30, SpringLayout.NORTH, contentPane);
+
+					contentPane.add(labelPasswordLen);
+					contentPane.add(tfPasswordLen);
+				}
+				else
+				{
+					contentPane.remove(labelPasswordLen);
+					contentPane.remove(tfPasswordLen);
+				}
+
+				frame.revalidate();
+				frame.repaint();
+			}
+		});
 
 		buttonConfirm.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event)
 			{
-				String passLenStr = tfPasswordLen.getText();
-				int passLen = 0;
+				PasswordEntry entry = findPasswordForId(currentlySelected.getText());
+				String newId = null;
+				String newUsername = null;
+				String newPassword = null;
+				String passwordLen = null;
+				String oldPassword = entry.getPassword();
 
-				if (passLenStr.length() == 0)
+				if (true == checkModifyId.isSelected())
 				{
-					passLen = 0;
-				}
-				else
-				{
-					//System.out.println("passLenStr != null and != \"\": " + passLenStr + " - " + passLenStr.length());
-					passLen = Integer.parseInt(passLenStr);
-				}
-
-				if (0 != passLen)
-				{
-					if (false == isValidLength(passLenStr))
+					newId = tfId.getText();
+					if (0 == newId.length())
 					{
-						showErrorDialog(currentLanguage.get(STRING_ERROR_INVALID_PASSWORD_LENGTH));
+						showErrorDialog("ID required");
 						return;
 					}
 				}
 
-/*
-				Iterator<PasswordEntry> iter = passwordEntryList.iterator();
-				String selectedId = currentlySelected.getText();
-				PasswordEntry entry = null;
-
-				while (iter.hasNext())
+				if (true == checkModifyUsername.isSelected())
 				{
-					entry = iter.next();
+					newUsername = tfUsername.getText();
 
-					if (selectedId.equals(entry.getId()))
-						break;
-
-					entry = null;
+					if (0 == newUsername.length())
+					{
+						showErrorDialog("Username required");
+						return;
+					}
 				}
 
-				if (null == entry)
+				if (true == checkModifyPassword.isSelected())
 				{
-					showErrorDialog("Could not change password for this ID");
-					return;
+					if (true == checkGenerateRandom.isSelected())
+					{
+						if (false == isValidLength(tfPasswordLen.getText()))
+						{
+							showErrorDialog(currentLanguage.get(STRING_ERROR_INVALID_PASSWORD_LENGTH));
+							return;
+						}
+
+						int passLen = Integer.parseInt(tfPasswordLen.getText());
+
+						newPassword = createNewPassword(passLen);
+					}
+					else
+					{
+						newPassword = tfPassword.getText();
+						int passLen = newPassword.length();
+
+						if (passLen < 8 || passLen > 100)
+						{
+							showErrorDialog(currentLanguage.get(STRING_ERROR_INVALID_PASSWORD_LENGTH));
+							return;
+						}
+					}
 				}
-*/
 
-				String newId = tfId.getText();
-				String newUsername = tfUsername.getText();
-				String oldPass = null;
-				String newPass = null;
-
-				if (0 != passLen)
+				if (null != newId)
 				{
-					oldPass = entry.getPassword();
-					newPass = createNewPassword(passLen);
-					entry.setPassword(newPass);
+					entry.setId(newId);
+					currentlySelected.setText(newId);
 				}
 
-				entry.setId(newId);
-				entry.setUsername(newUsername);
-				entry.setTimestamp(System.currentTimeMillis());
+				if (null != newUsername)
+					entry.setUsername(newUsername);
 
-				currentlySelected.setText(newId);
+				if (null != newPassword)
+				{
+					entry.setPassword(newPassword);
+					entry.setTimestamp(System.currentTimeMillis());
+				}
 
 				putPasswordEntries();
 				revalidate();
 
-				if (null == newPass)
+				if (null == newPassword)
 					showPasswordDetailsForId(entry.getId());
 				else
-					showChangedDetails(entry.getId(), entry.getUsername(), oldPass, newPass, entry.getTimestamp());
+					showChangedDetails(entry.getId(), entry.getUsername(), oldPassword, newPassword, entry.getTimestamp());
 
 				frame.dispose();
 			}
