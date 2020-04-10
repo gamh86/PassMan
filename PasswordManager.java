@@ -59,6 +59,14 @@ import javax.swing.DefaultListSelectionModel;
 
 /* TODO
 
+	Fix bug related to the elements from the doinitialconfig
+	frame (same main JFrame extended by our class) remaining
+	in the window after setupGUI() despite the fact that
+	in doinitialconfiguration(), they are explicitly removed
+	and dispose() is called on the window... (exact same
+	process takes place after the initial language configuration
+	is finished: components removed, frame disposed, and
+	this problem does _not_ occur in that case...
 
 	Use a third party library for JSON support for serializing
 	entries in the password file.
@@ -1208,7 +1216,6 @@ public class PasswordManager extends JFrame
 			String line = entry.getId() +
 				"|" + entry.getUsername() +
 				"|" + entry.getPassword() +
-				"|" + entry.getPassword().length() +
 				"|" + entry.getTimestamp() +
 				"|" + entry.getSizeCharacterSet();
 
@@ -1449,13 +1456,6 @@ public class PasswordManager extends JFrame
 			byte[] rawPassword = new byte[pos - start];
 			System.arraycopy(rawLine, start, rawPassword, 0, pos - start);
 
-			start = ++pos;
-			while (rawLine[pos] != (byte)'|' && pos < rawLine.length)
-				++pos;
-
-		/*
-		 * Skip past the length field.
-		 */
 			start = ++pos;
 			while (rawLine[pos] != (byte)'|' && pos < rawLine.length)
 				++pos;
@@ -2729,11 +2729,11 @@ public class PasswordManager extends JFrame
 
 		JLabel iconContainer = new JLabel(iconLocked128);
 
-		final int frameWidth = 620;
-		final int frameHeight = 650;
+		final int windowWidth = 620;
+		final int windowHeight = 650;
 
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setSize(frameWidth, frameHeight);
+		setSize(windowWidth, windowHeight);
 		setTitle(currentLanguage.get(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION));
 
 		contentPane.setLayout(spring);
@@ -2757,7 +2757,7 @@ public class PasswordManager extends JFrame
 		buttonConfirm.setBackground(Color.WHITE);
 		//buttonOk.setBackground(new Color(135, 255, 175)); // 0x87ffaf
 
-		int widthHalf = (frameWidth/2);
+		int widthHalf = (windowWidth>>1);
 		int leftOffset = (widthHalf - 225);
 
 		spring.putConstraint(SpringLayout.WEST, iconContainer, (widthHalf-(iconLocked128.getIconWidth()/2)), SpringLayout.WEST, contentPane);
@@ -2837,6 +2837,9 @@ public class PasswordManager extends JFrame
 				contentPane.remove(labelConfirm);
 				contentPane.remove(passFieldConfirm);
 				contentPane.remove(buttonConfirm);
+
+				//revalidate();
+				//repaint();
 
 				dispose();
 				setupGUI();
@@ -3983,6 +3986,9 @@ public class PasswordManager extends JFrame
 		setLocationRelativeTo(null);
 		setVisible(true);
 
+		revalidate();
+		repaint();
+
 		if (null == fContents || false == fileContentsCached)
 		{
 			doInitialConfiguration();
@@ -4128,6 +4134,11 @@ public class PasswordManager extends JFrame
 		contentPane.add(scrollPane);
 		contentPane.add(buttonConfirm);
 
+		getRootPane().setDefaultButton(buttonConfirm);
+
+		setLocationRelativeTo(null);
+		setVisible(true);
+
 		buttonConfirm.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event)
@@ -4167,13 +4178,12 @@ public class PasswordManager extends JFrame
 				contentPane.remove(containerIconSettings);
 				contentPane.remove(scrollPane);
 				contentPane.remove(buttonConfirm);
-				//dispose();
+
+				dispose();
+
 				doInitialConfiguration();
 			}
 		});
-
-		setLocationRelativeTo(null);
-		setVisible(true);
 	}
 
 	private void getConfigAndDoStartup()
