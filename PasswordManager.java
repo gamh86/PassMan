@@ -566,6 +566,7 @@ public class PasswordManager extends JFrame
 	private static final int STRING_CHANGE_ID = 57;
 	private static final int STRING_CHANGE_USERNAME = 58;
 	private static final int STRING_CHANGE_PASSWORD = 59;
+	private static final int STRING_PASTE = 60;
 
 	private static Map<Integer,String> getLanguageStringsKorean()
 	{
@@ -604,6 +605,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_CHANGE_ID, "비밀번호 아이디 변경");
 		map.put(STRING_CHANGE_USERNAME, "사용자 이름 변경");
 		map.put(STRING_CHANGE_PASSWORD, "비밀번호 변경");
+		map.put(STRING_PASTE, "붙이");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "비밀번호 관리자 설정");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "비밀번호 설경");
@@ -688,6 +690,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_CHANGE_ID, "Modifier ID");
 		map.put(STRING_CHANGE_USERNAME, "Modifier Pseudo");
 		map.put(STRING_CHANGE_PASSWORD, "Modifier Mot de Passe");
+		map.put(STRING_PASTE, "Coller");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Détails du mot de passe");
@@ -776,6 +779,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_CHANGE_ID, "Modify ID");
 		map.put(STRING_CHANGE_USERNAME, "Modify Username");
 		map.put(STRING_CHANGE_PASSWORD, "Modify Password");
+		map.put(STRING_PASTE, "Paste");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Password Manager Configuration");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Password Details");
@@ -862,6 +866,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_CHANGE_ID, "Ubah kata laluan ID");
 		map.put(STRING_CHANGE_USERNAME, "Ubah lengguna");
 		map.put(STRING_CHANGE_PASSWORD, "Ubah kata laluan");
+		map.put(STRING_PASTE, "Tampal");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Konfigurasi Pengurus Kata Laluan");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Butiran Kata Laluan");
@@ -2894,6 +2899,11 @@ public class PasswordManager extends JFrame
 		tfPassLen.setPreferredSize(tfSize);
 		tfPassword.setPreferredSize(tfSize);
 
+		tfId.setComponentPopupMenu(new RightClickPopup().getMenu());
+		tfUsername.setComponentPopupMenu(new RightClickPopup().getMenu());
+		tfPassLen.setComponentPopupMenu(new RightClickPopup().getMenu());
+		tfPassword.setComponentPopupMenu(new RightClickPopup().getMenu());
+
 		JCheckBox checkbox = new JCheckBox(currentLanguage.get(STRING_GENERATE_RANDOM), false);
 
 		JButton buttonConfirm = new JButton(iconConfirm64);
@@ -2990,6 +3000,7 @@ public class PasswordManager extends JFrame
 
 				if (true == isSelected)
 				{
+					tfPassword.setText("");
 					tfPassword.setEditable(false);
 
 					spring.putConstraint(SpringLayout.WEST, labelPassLen, leftOffset, SpringLayout.WEST, contentPane);
@@ -3228,6 +3239,11 @@ public class PasswordManager extends JFrame
 		tfPassword.setPreferredSize(sizeTextField);
 		tfPasswordLen.setPreferredSize(sizeTextField);
 
+		tfId.setComponentPopupMenu(new RightClickPopup().getMenu());
+		tfUsername.setComponentPopupMenu(new RightClickPopup().getMenu());
+		tfPassword.setComponentPopupMenu(new RightClickPopup().getMenu());
+		tfPasswordLen.setComponentPopupMenu(new RightClickPopup().getMenu());
+
 		JCheckBox checkModifyId = new JCheckBox(currentLanguage.get(STRING_CHANGE_ID), true);
 		JCheckBox checkModifyUsername = new JCheckBox(currentLanguage.get(STRING_CHANGE_USERNAME), true);
 		JCheckBox checkModifyPassword = new JCheckBox(currentLanguage.get(STRING_CHANGE_PASSWORD), true);
@@ -3365,6 +3381,7 @@ public class PasswordManager extends JFrame
 				}
 				else
 				{
+					tfPassword.setText("");
 					tfPassword.setEditable(false);
 					checkGenerateRandom.setSelected(false);
 					checkGenerateRandom.setEnabled(false);
@@ -3388,6 +3405,9 @@ public class PasswordManager extends JFrame
 
 				if (true == isSelected)
 				{
+					tfPassword.setText("");
+					tfPassword.setEditable(false);
+
 					spring.putConstraint(SpringLayout.WEST, labelPasswordLen, 60, SpringLayout.WEST, contentPane);
 					spring.putConstraint(SpringLayout.NORTH, labelPasswordLen, passLenSaveNorth, SpringLayout.NORTH, contentPane);
 
@@ -3399,6 +3419,8 @@ public class PasswordManager extends JFrame
 				}
 				else
 				{
+					tfPassword.setEditable(true);
+
 					contentPane.remove(labelPasswordLen);
 					contentPane.remove(tfPasswordLen);
 				}
@@ -4306,13 +4328,24 @@ public class PasswordManager extends JFrame
 		{
 			menu = new JPopupMenu();
 			Action copy = new DefaultEditorKit.CopyAction();
+			Action paste = new DefaultEditorKit.PasteAction();
 
 			if (null == currentLanguage) // default to English
+			{
 				copy.putValue(Action.NAME, "Copy");
+				paste.putValue(Action.NAME, "Paste");
+			}
 			else
+			{
 				copy.putValue(Action.NAME, currentLanguage.get(STRING_COPY));
+				paste.putValue(Action.NAME, currentLanguage.get(STRING_PASTE));
+			}
+
 			copy.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
+			paste.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
+
 			menu.add(copy);
+			menu.add(paste);
 		}
 
 		public JPopupMenu getMenu()
