@@ -344,6 +344,7 @@ class AESCrypt
 
 public class PasswordManager extends JFrame
 {
+	private static final String VERSION = "1.0.1";
 	private String passwordDirectory = null;
 	private String passwordFile = null;
 	private String configFile = null;
@@ -2500,6 +2501,7 @@ public class PasswordManager extends JFrame
 		 * to the newly chosen language.
 		 */
 			// in main JFrame (created in setupGUI)
+			setTitle(currentLanguage.get(STRING_APPLICATION_NAME) + " v" + VERSION);
 			taAppName.setText(currentLanguage.get(STRING_APPLICATION_NAME));
 			labelPasswordIds.setText(currentLanguage.get(STRING_PASSWORD_ID_LIST));
 
@@ -2851,8 +2853,13 @@ public class PasswordManager extends JFrame
 		JFrame frame = new JFrame();
 		Container contentPane = frame.getContentPane();
 		SpringLayout spring = new SpringLayout();
-		final int windowWidth = 620;
-		final int windowHeight = 680;
+		//final int windowWidth = 620;
+		//final int windowHeight = 680;
+		final int windowWidth = 650;
+		final int windowHeight = 700;
+		final int tfWidth = 500;
+		final int tfHeight = 30;
+		Dimension tfSize = new Dimension(tfWidth, tfHeight);
 
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.setSize(windowWidth, windowHeight);
@@ -2879,7 +2886,6 @@ public class PasswordManager extends JFrame
 		tfPassLen.setFont(fontInput);
 		tfPassword.setFont(fontInput);
 
-		Dimension tfSize = new Dimension(400, 30);
 		tfId.setPreferredSize(tfSize);
 		tfUsername.setPreferredSize(tfSize);
 		tfPassLen.setPreferredSize(tfSize);
@@ -2892,34 +2898,34 @@ public class PasswordManager extends JFrame
 		buttonConfirm.setBackground(colorConfirm);
 		//buttonConfirm.setBorder(null);
 
-		final int halfWidth = (windowWidth/2);
-		final int leftOffset = (halfWidth - 200);
+		final int halfWidth = (windowWidth>>1);
+		final int leftOffset = 80;
 		int north = 40;
 
-		spring.putConstraint(SpringLayout.WEST, padlockContainer, (halfWidth - (iconLocked128.getIconWidth()/2)), SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, padlockContainer, (halfWidth - (iconLocked128.getIconWidth()>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, padlockContainer, north, SpringLayout.NORTH, contentPane);
 
-		north = iconLocked128.getIconHeight() + 75;
+		north += iconLocked128.getIconHeight() + 60;
 
 		spring.putConstraint(SpringLayout.WEST, labelId, leftOffset, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelId, north, SpringLayout.NORTH, contentPane);
 
 		north += 30;
 
-		spring.putConstraint(SpringLayout.WEST, tfId, leftOffset, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, tfId, (halfWidth - (tfWidth>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, tfId, north, SpringLayout.NORTH, contentPane);
 
-		north += 60;
+		north += 50;
 
 		spring.putConstraint(SpringLayout.WEST, labelUsername, leftOffset, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelUsername, north, SpringLayout.NORTH, contentPane);
 
 		north += 30;
 
-		spring.putConstraint(SpringLayout.WEST, tfUsername, leftOffset, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, tfUsername, (halfWidth - (tfWidth>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, tfUsername, north, SpringLayout.NORTH, contentPane);
 
-		north += 60;
+		north += 50;
 
 		spring.putConstraint(SpringLayout.WEST, labelPassword, leftOffset, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelPassword, north, SpringLayout.NORTH, contentPane);
@@ -2929,10 +2935,10 @@ public class PasswordManager extends JFrame
 
 		north += 30;
 
-		spring.putConstraint(SpringLayout.WEST, tfPassword, leftOffset, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, tfPassword, (halfWidth - (tfWidth>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, tfPassword, north, SpringLayout.NORTH, contentPane);
 
-		north += 60;
+		north += 50;
 		int passLenSaveNorth = north;
 
 		spring.putConstraint(SpringLayout.WEST, labelPassLen, leftOffset, SpringLayout.WEST, contentPane);
@@ -2940,12 +2946,12 @@ public class PasswordManager extends JFrame
 
 		north += 30;
 
-		spring.putConstraint(SpringLayout.WEST, tfPassLen, leftOffset, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, tfPassLen, (halfWidth - (tfWidth>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, tfPassLen, north, SpringLayout.NORTH, contentPane);
 
-		north += 60;
+		north += 80;
 
-		spring.putConstraint(SpringLayout.WEST, buttonConfirm, (halfWidth - (iconConfirm64.getIconWidth()/2) - 20), SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, buttonConfirm, (halfWidth - (iconConfirm64.getIconWidth()>>1) - 15), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, buttonConfirm, north, SpringLayout.NORTH, contentPane);
 
 		contentPane.add(padlockContainer);
@@ -2986,7 +2992,7 @@ public class PasswordManager extends JFrame
 					spring.putConstraint(SpringLayout.WEST, labelPassLen, leftOffset, SpringLayout.WEST, contentPane);
 					spring.putConstraint(SpringLayout.NORTH, labelPassLen, passLenSaveNorth, SpringLayout.NORTH, contentPane);
 
-					spring.putConstraint(SpringLayout.WEST, tfPassLen, leftOffset, SpringLayout.WEST, contentPane);
+					spring.putConstraint(SpringLayout.WEST, tfPassLen, (halfWidth - (tfWidth>>1)), SpringLayout.WEST, contentPane);
 					spring.putConstraint(SpringLayout.NORTH, tfPassLen, passLenSaveNorth + 30, SpringLayout.NORTH, contentPane);
 
 					contentPane.add(labelPassLen);
@@ -3167,7 +3173,6 @@ public class PasswordManager extends JFrame
 		JFrame frame = new JFrame();
 		Container contentPane = frame.getContentPane();
 		SpringLayout spring = new SpringLayout();
-		int north = 40;
 		final int windowWidth = 650;
 		final int windowHeight = 700;
 		final int tfWidth = 500;
@@ -3230,7 +3235,9 @@ public class PasswordManager extends JFrame
 		buttonConfirm.setBackground(colorConfirm);
 		//buttonConfirm.setBorder(null);
 
-		spring.putConstraint(SpringLayout.WEST, containerIconLocked, ((windowWidth/2) - (iconLocked128.getIconWidth()/2)), SpringLayout.WEST, contentPane);
+		int north = 40;
+
+		spring.putConstraint(SpringLayout.WEST, containerIconLocked, ((windowWidth>>1) - (iconLocked128.getIconWidth()>>1)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, containerIconLocked, north, SpringLayout.NORTH, contentPane);
 
 		north += iconLocked128.getIconHeight() + 60;
@@ -3288,7 +3295,7 @@ public class PasswordManager extends JFrame
 
 		north += 80;
 
-		spring.putConstraint(SpringLayout.WEST, buttonConfirm, ((windowWidth/2) - (iconConfirm64.getIconWidth()/2)) - 15, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, buttonConfirm, ((windowWidth>>1) - (iconConfirm64.getIconWidth()>>1)) - 15, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, buttonConfirm, north, SpringLayout.NORTH, contentPane);
 
 		contentPane.add(containerIconLocked);
@@ -3833,6 +3840,7 @@ public class PasswordManager extends JFrame
 		Container contentPane = getContentPane();
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(mainWindowWidth, mainWindowHeight);
+		setTitle(currentLanguage.get(STRING_APPLICATION_NAME) + " v" + VERSION);
 
 // global var
 		labelPasswordIds = new JLabel(currentLanguage.get(STRING_PASSWORD_ID_LIST));
