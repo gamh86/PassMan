@@ -2924,7 +2924,7 @@ public class PasswordManager extends JFrame
 		spring.putConstraint(SpringLayout.WEST, labelPassword, leftOffset, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelPassword, north, SpringLayout.NORTH, contentPane);
 
-		spring.putConstraint(SpringLayout.WEST, checkbox, leftOffset + 100, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, checkbox, leftOffset + 200, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, checkbox, north, SpringLayout.NORTH, contentPane);
 
 		north += 30;
@@ -3512,12 +3512,12 @@ public class PasswordManager extends JFrame
 		JLabel containerIcon = new JLabel(icon);
 		JTextArea taInfo = new JTextArea(currentLanguage.get(STRING_PROMPT_UNLOCK_PASSWORD_FILE));
 
-		final int windowWidth = 600;
+		final int windowWidth = 620;
 		final int windowHeight = 250;
 		final int passFieldWidth = 420;
 		final int passFieldHeight = 35;
 		final int buttonWidth = 80;
-		final int buttonHeight = 32;
+		final int buttonHeight = 30;
 		final int combinedWidth = passFieldWidth + buttonWidth;
 		Dimension sizePassField = new Dimension(passFieldWidth, passFieldHeight);
 		Dimension sizeButtonConfirm = new Dimension(buttonWidth, buttonHeight);
@@ -3550,7 +3550,7 @@ public class PasswordManager extends JFrame
 		spring.putConstraint(SpringLayout.WEST, containerIcon, 40, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, containerIcon, north, SpringLayout.NORTH, contentPane);
 
-		spring.putConstraint(SpringLayout.WEST, taInfo, 40 + iconWidth + 60, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, taInfo, 40 + iconWidth + 25, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, taInfo, north + 10, SpringLayout.NORTH, contentPane);
 
 		north += iconHeight + 30;
