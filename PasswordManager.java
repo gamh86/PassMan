@@ -68,14 +68,6 @@ import javax.swing.DefaultListSelectionModel;
 	is finished: components removed, frame disposed, and
 	this problem does _not_ occur in that case...
 
-	Use a third party library for JSON support for serializing
-	entries in the password file.
-
-	Find a better way to position elements within windows that
-	will keep a fairly consistent view on all OS's (on Windows,
-	some elements do not appear centred and the clipboard button
-	is slightly beyond the right and botton edges of the window).
-
 	Deal with window resizes.
 
 	Add a component indicating password staleness in the password
