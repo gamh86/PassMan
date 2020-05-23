@@ -420,6 +420,7 @@ public class PasswordManager extends JFrame
 	private static final String view64 = "./Images/view_64x64.png";
 	private static final String cog64 = "./Images/cog_64x64.png";
 	private static final String confirm64 = "./Images/confirm_64x64.png";
+	private static final String search64 = "./Images/search_64x64.png";
 
 	private static final String add32 = "./Images/add_32x32.png";
 	private static final String bin32 = "./Images/bin_32x32.png";
@@ -453,6 +454,7 @@ public class PasswordManager extends JFrame
 	private static ImageIcon iconView64 = null;
 	private static ImageIcon iconCog64 = null;
 	private static ImageIcon iconConfirm64 = null;
+	private static ImageIcon iconSearch64 = null;
 
 	private static ImageIcon iconAdd32 = null;
 	private static ImageIcon iconBin32 = null;
@@ -576,7 +578,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_COPY_PASSWORD, "클립보드에게 비밀번호를 복사하기");
 		map.put(STRING_CHANGE_SETTINGS, "설정 변경");
 		map.put(STRING_CURRENT_PASSWORD, "현재 비밀번호 입력");
-		map.put(STRING_NEW_PASSWORD, "새 비밀번호 입력");
+		//map.put(STRING_NEW_PASSWORD, "새 비밀번호 입력");
 		map.put(STRING_CONFIRM_NEW_PASSWORD, "새 비밀번호 재입력");
 		map.put(STRING_CONFIRM_PASSWORD, "비밀번호 재입력");
 		map.put(STRING_CHANGE_MASTER_PASSWORD, "마스터 비밀번호 변경");
@@ -615,6 +617,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_PROMPT_OK, "확인");
 		map.put(STRING_PROMPT_CANCEL, "취소");
 		map.put(STRING_PROMPT_CHANGED_LANGUAGE, "언어를 변경되었습니다");
+		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE, "마스터 비밀번호를 입력");//하십시오");
 
 		map.put(STRING_ERROR_PASSWORD_ID, "이 아이디의 비밀번호를 변경하될 수 없었습니다");
 		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "비밀번호가 이미 존재합니다");
@@ -638,10 +641,6 @@ public class PasswordManager extends JFrame
 					+ "  할 수 있는 프로세서를 임의로\n"
 					+ "  기반으로합니다.");
 
-		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE,
-					"비밀번호 파일을 잠금 해제하도록\n"
-					+ "마스터 비밀번호를 입력하십시오");
-
 		return Collections.unmodifiableMap(map);
 	}
 
@@ -661,7 +660,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_CHANGE_SETTINGS, "Mettre à jour des parametres");
 		map.put(STRING_UNLOCK_PASSWORD_FILE, "Déverouiller le fichier des mots de passes");
 		map.put(STRING_CURRENT_PASSWORD, "Saisir mot de passe actuel");
-		map.put(STRING_NEW_PASSWORD, "Saisir nouveau mot de passe");
+		//map.put(STRING_NEW_PASSWORD, "Saisir nouveau mot de passe");
 		map.put(STRING_CONFIRM_NEW_PASSWORD, "Vérifier nouveau mot de passe");
 		map.put(STRING_CONFIRM_PASSWORD, "Vérifier mot de passe");
 		map.put(STRING_CHANGE_MASTER_PASSWORD, "Mettre à jour mot de passe maître");
@@ -700,6 +699,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_PROMPT_OK, "OK");
 		map.put(STRING_PROMPT_CANCEL, "Annuler");
 		map.put(STRING_PROMPT_CHANGED_LANGUAGE, "La langue a été changée");
+		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE, "Saisir mot de passe maître");
 
 		map.put(STRING_ERROR_PASSWORD_ID, "Le mot de passe pour cet ID n'a pas pu être mis à jour");
 		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "Il y a déjà un mot de passe avec cet ID");
@@ -727,10 +727,6 @@ public class PasswordManager extends JFrame
 					+ "  processeur qui peut réaliser environ\n"
 					+ "  2 billions d'instructions par seconde\n");
 
-		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE,
-					"Saisir le mot de passe maître\n"
-					+ "pour déverouiller le fichier");
-
 		return Collections.unmodifiableMap(map);
 	}
 
@@ -750,7 +746,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_CHANGE_SETTINGS, "Update settings");
 		map.put(STRING_UNLOCK_PASSWORD_FILE, "Unlock the password file");
 		map.put(STRING_CURRENT_PASSWORD, "Enter current password");
-		map.put(STRING_NEW_PASSWORD, "Enter new password");
+		//map.put(STRING_NEW_PASSWORD, "Enter new password");
 		map.put(STRING_CONFIRM_NEW_PASSWORD, "Confirm new password");
 		map.put(STRING_CONFIRM_PASSWORD, "Confirm password");
 		map.put(STRING_CHANGE_MASTER_PASSWORD, "Change master password");
@@ -790,6 +786,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_PROMPT_OK, "OK");
 		map.put(STRING_PROMPT_CANCEL, "Cancel");
 		map.put(STRING_PROMPT_CHANGED_LANGUAGE, "Language changed");
+		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE, "Enter master password");
 
 		map.put(STRING_ERROR_PASSWORD_ID, "Could not change password for this ID");
 		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "");
@@ -814,10 +811,6 @@ public class PasswordManager extends JFrame
 					+ "  that can perform around 2 trillion\n"
 					+ "  instructions per second.");
 
-		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE,
-					"Enter master password to\n"
-					+ "unlock the password file");
-
 		return Collections.unmodifiableMap(map);
 	}
 
@@ -837,7 +830,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_CHANGE_SETTINGS, "Kemas kini tetapan");
 		map.put(STRING_UNLOCK_PASSWORD_FILE, "Membuka kunci file kata laluan");
 		map.put(STRING_CURRENT_PASSWORD, "Masukkan kata laluan terkini");
-		map.put(STRING_NEW_PASSWORD, "Masukkan kata laluan baru");
+		//map.put(STRING_NEW_PASSWORD, "Masukkan kata laluan baru");
 		map.put(STRING_CONFIRM_NEW_PASSWORD, "Pengesahan kata laluan baru");
 		map.put(STRING_CONFIRM_PASSWORD, "Pengesahan kata laluan");
 		map.put(STRING_CHANGE_MASTER_PASSWORD, "Ubah kata laluan induk");
@@ -876,6 +869,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_PROMPT_OK, "Okey");
 		map.put(STRING_PROMPT_CANCEL, "Batalkan");
 		map.put(STRING_PROMPT_CHANGED_LANGUAGE, "Bahasa diubah");
+		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE, "Masukkan kata laluan induk");
 
 		map.put(STRING_ERROR_PASSWORD_ID, "Kata laluan tidak boleh diubah untuk ID ini. ");
 		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "Kata laluan untuk ID ini sudah wujud.");
@@ -900,10 +894,6 @@ public class PasswordManager extends JFrame
 					"* Ini berdasarkan sembarangan pada\n"
 					+ "  pemproses yang boleh melaksanakan\n"
 					+ "  sekitar 2 trilion arahan sesaat.");
-
-		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE,
-					"Masukkan kata laluan induk untuk\n"
-					+ "membuka kunci file kata laluan");
 
 		return Collections.unmodifiableMap(map);
 	}
@@ -3873,6 +3863,7 @@ public class PasswordManager extends JFrame
 		JButton buttonChange = new JButton(iconChange64);
 		JButton buttonRemove = new JButton(iconBin64);
 		JButton buttonSet = new JButton(iconCog64);
+		JButton buttonSearch = new JButton(iconSearch64);
 
 		Color colorButton = new Color(240, 240, 240);
 
@@ -3881,21 +3872,28 @@ public class PasswordManager extends JFrame
 		buttonChange.setBackground(colorButton);
 		buttonRemove.setBackground(colorButton);
 		buttonSet.setBackground(colorButton);
+		buttonSearch.setBackground(colorButton);
 
+/*
 		buttonAdd.setBorder(null);
 		buttonView.setBorder(null);
 		buttonChange.setBorder(null);
 		buttonRemove.setBorder(null);
 		buttonSet.setBorder(null);
+*/
+
+		final int nrButtons = 6;
+		final int buttonsPerRow = 6;
 
 		//panelButtons.setLayout(new BoxLayout(panelButtons, BoxLayout.X_AXIS));
-		panelButtons.setLayout(new GridLayout(0, 2));
+		panelButtons.setLayout(new GridLayout(((nrButtons-1)/buttonsPerRow)+1, nrButtons));
 
 		panelButtons.add(buttonAdd);
 		panelButtons.add(buttonView);
 		panelButtons.add(buttonChange);
 		panelButtons.add(buttonRemove);
 		panelButtons.add(buttonSet);
+		panelButtons.add(buttonSearch);
 
 // global var
 		taAppName = new JTextArea(currentLanguage.get(STRING_APPLICATION_NAME));
@@ -3984,10 +3982,12 @@ public class PasswordManager extends JFrame
 		spring.putConstraint(SpringLayout.WEST, scrollPane, HORIZONTAL_GAP, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, scrollPane, north, SpringLayout.NORTH, contentPane);
 
-		//north += scrollPaneHeight + VERTICAL_GAP;
+		north += scrollPaneHeight + VERTICAL_GAP;
 
-		spring.putConstraint(SpringLayout.WEST, panelButtons, (HORIZONTAL_GAP>>1) + scrollPaneWidth + 60, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, panelButtons, north-15, SpringLayout.NORTH, contentPane);
+		//spring.putConstraint(SpringLayout.WEST, panelButtons, (HORIZONTAL_GAP>>1) + scrollPaneWidth + 60, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, panelButtons, 60, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, panelButtons, north, SpringLayout.NORTH, contentPane);
+		//spring.putConstraint(SpringLayout.NORTH, panelButtons, north-15, SpringLayout.NORTH, contentPane);
 
 		contentPane.setLayout(spring);
 
