@@ -1,3 +1,6 @@
+import aescrypt.*;
+import backup.*; // for our GDriveBackup class
+
 import java.io.File;
 import java.io.FileReader; /* for reading streams of characters */
 import java.io.FileInputStream; /* for reading raw bytes (binary data) */
@@ -8,14 +11,13 @@ import java.io.UnsupportedEncodingException;
 import java.io.BufferedReader;
 
 import java.lang.Math;
-//import java.math.BigInteger;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.Base64;
+//import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
@@ -27,19 +29,6 @@ import java.util.TimeZone;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-
-import javax.crypto.Cipher;
-import javax.crypto.SecretKeyFactory;
-
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-
-import javax.crypto.BadPaddingException;
 
 import java.awt.*;
 import java.awt.datatransfer.StringSelection; // for copying text to clipboard
@@ -68,279 +57,19 @@ import javax.swing.DefaultListSelectionModel;
 	is finished: components removed, frame disposed, and
 	this problem does _not_ occur in that case...
 
+	Use a third party library for JSON support for serializing
+	entries in the password file.
+
+	Find a better way to position elements within windows that
+	will keep a fairly consistent view on all OS's (on Windows,
+	some elements do not appear centred and the clipboard button
+	is slightly beyond the right and botton edges of the window).
+
 	Deal with window resizes.
 
 	Add a component indicating password staleness in the password
 	details frames.
 */
-
-class AESCrypt
-{
-	private static SecretKeySpec secretKey;
-	private static byte[] rawKey;
-
-	private static final int AES_KEY_SIZE = 32;
-	private static final int AES_KEY_BITS = (AES_KEY_SIZE * 8);
-	private static final int IV_LENGTH = 16;
-	private static final int SALT_LENGTH = 8;
-	private static final int PBKDF2_ITERATIONS = 1000;
-	private static final String CRYPTO_TRANSFORMATION = "AES/CBC/PKCS5Padding";
-	private static final String CRYPTO_ALGORITHM = "AES";
-
-	public AESCrypt() { }
-
-	private String parseDirectory(String path)
-	{
-		int pos = path.length();
-
-		try
-		{
-			byte[] rawPath = path.getBytes("UTF-8");
-			pos = rawPath.length - 1;
-
-			while (rawPath[pos] != (byte)'/' && pos > 1)
-				--pos;
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		return path.substring(0, pos);
-	}
-
-	/**
-	 * Get SALT_LENGTH pseudo-random bytes
-	 */
-	private byte[] generateSalt()
-	{
-		byte[] salt = new byte[SALT_LENGTH];
-		new SecureRandom().nextBytes(salt);
-		return salt;
-	}
-
-	/**
-	 * Get IV_LENGTH pseudo-random bytes
-	 */
-	private byte[] generateIV()
-	{
-		byte[] iv = new byte[IV_LENGTH];
-		new SecureRandom().nextBytes(iv);
-		return iv;
-	}
-
-	/**
-	 * Encrypt the password file
-	 * @param path the path to the password file
-	 * @param key the password file owner's passphrase
-	 */
-
-	public byte[] encryptFile(String path, String key)
-	{
-		String fContents = "";
-		byte[] encrypted = null;
-		byte[] iv = null;
-		byte[] salt = null;
-		byte[] outData = null;
-
-		try
-		{
-			BufferedReader bf = new BufferedReader(new FileReader(path));
-			String line = null;
-
-			while ((line = bf.readLine()) != null)
-			{
-				fContents += line + "\n";
-			}
-
-			System.out.println(fContents);
-			bf.close();
-
-			salt = generateSalt();
-
-			char[] rawKey = key.toCharArray();
-
-			Base64.Encoder base = Base64.getEncoder();
-
-			//System.out.println("Password: " + key);
-			//System.out.println("    Salt: " + base.encodeToString(salt));
-
-			PBEKeySpec pbe = new PBEKeySpec(rawKey, salt, PBKDF2_ITERATIONS, AES_KEY_BITS);
-			SecretKeyFactory kFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-			byte[] rawDerivedKey = kFactory.generateSecret(pbe).getEncoded();
-
-			//System.out.println("PBKDF2-derived key: " + base.encodeToString(rawDerivedKey));
-
-			iv = generateIV();
-
-			Cipher cipher = Cipher.getInstance(CRYPTO_TRANSFORMATION);
-			cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawDerivedKey, CRYPTO_ALGORITHM), new IvParameterSpec(iv));
-			byte[] result = cipher.doFinal(fContents.getBytes("UTF-8"));
-
-			outData = new byte[result.length + iv.length + SALT_LENGTH + 4];
-
-			ByteBuffer byteBuf = ByteBuffer.allocate(4);
-			byteBuf.putInt(PBKDF2_ITERATIONS);
-
-			final int offsetIters = 0;
-			final int offsetIv = 4;
-			final int offsetSalt = 20;
-			final int offsetData = 28;
-
-			System.arraycopy(byteBuf.array(), 0, outData, offsetIters, 4);
-			System.arraycopy(iv, 0, outData, offsetIv, IV_LENGTH);
-			System.arraycopy(salt, 0, outData, offsetSalt, SALT_LENGTH);
-			System.arraycopy(result, 0, outData, offsetData, result.length);
-
-			System.out.println("            IV: " + base.encodeToString(iv));
-			System.out.println("Encrypted Data: " + base.encodeToString(result));
-			System.out.println("      Together: " + base.encodeToString(outData));
-
-			File fObj = new File(path);
-			FileOutputStream fOut = new FileOutputStream(fObj, false);
-			byte[] zeros = new byte[(int)fObj.length()];
-
-			int pos = 0;
-			while (pos < fObj.length())
-				zeros[pos++] = (byte)0;
-
-			fOut.write(zeros);
-			fOut.flush();
-			fOut.close();
-
-			fOut = new FileOutputStream(fObj, false);
-			fOut.write(outData);
-			fOut.flush();
-			fOut.close();
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		return outData;
-	}
-
-	public byte[] encryptData(String data, String key)
-	{
-		byte[] outData = null;
-
-		try
-		{
-			byte[] salt = generateSalt();
-			char[] rawKey = key.toCharArray();
-			byte[] iv = null;
-
-			Base64.Encoder base = Base64.getEncoder();
-
-			//System.out.println("Password: " + key);
-			//System.out.println("    Salt: " + base.encodeToString(salt));
-
-			PBEKeySpec pbe = new PBEKeySpec(rawKey, salt, PBKDF2_ITERATIONS, AES_KEY_BITS);
-			SecretKeyFactory kFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-			byte[] rawDerivedKey = kFactory.generateSecret(pbe).getEncoded();
-
-			//System.out.println("PBKDF2-derived key: " + base.encodeToString(rawDerivedKey));
-
-			iv = generateIV();
-
-			Cipher cipher = Cipher.getInstance(CRYPTO_TRANSFORMATION);
-			cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawDerivedKey, CRYPTO_ALGORITHM), new IvParameterSpec(iv));
-			byte[] result = cipher.doFinal(data.getBytes("UTF-8"));
-
-			outData = new byte[result.length + IV_LENGTH + SALT_LENGTH + 4];
-
-			ByteBuffer byteBuf = ByteBuffer.allocate(4);
-			byteBuf.putInt(PBKDF2_ITERATIONS);
-
-			final int offsetIters = 0;
-			final int offsetIv = 4;
-			final int offsetSalt = 20;
-			final int offsetData = 28;
-
-			System.arraycopy(byteBuf.array(), 0, outData, offsetIters, 4);
-			System.arraycopy(iv, 0, outData, offsetIv, IV_LENGTH);
-			System.arraycopy(salt, 0, outData, offsetSalt, SALT_LENGTH);
-			System.arraycopy(result, 0, outData, offsetData, result.length);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		return outData;
-	}
-
-	public String decryptFile(String path, String key)
-	{
-		String contents = null;
-
-		try
-		{
-			byte[] iv = new byte[IV_LENGTH];
-			byte[] salt = new byte[SALT_LENGTH];
-			char[] rawKey = key.toCharArray();
-			byte[] data = null;
-			byte[] iters = new byte[4];
-			File fObj = new File(path);
-			FileInputStream fIn = new FileInputStream(fObj);
-			int pbkdf2iterations = 0;
-
-			byte[] enc = new byte[(int)fObj.length()];
-
-/*
- * File length minus (IV length (16) + salt length (8) + size of int (4))
- */
-			data = new byte[enc.length - (16 + SALT_LENGTH + 4)];
-
-			fIn.read(enc);
-			fIn.close();
-
-			final int offsetIters = 0;
-			final int offsetIv = 4;
-			final int offsetSalt = 20;
-			final int offsetData = 28;
-
-			System.arraycopy(enc, offsetIters, iters, 0, 4);
-			System.arraycopy(enc, offsetIv, iv, 0, IV_LENGTH);
-			System.arraycopy(enc, offsetSalt, salt, 0, SALT_LENGTH);
-			System.arraycopy(enc, offsetData, data, 0, enc.length - (16 + SALT_LENGTH + 4));
-
-			ByteBuffer byteBuf = ByteBuffer.wrap(iters);
-			pbkdf2iterations = byteBuf.getInt(0);
-
-/*
- * Always use the number of iterations
- * for PBKDF2 that was encoded in the
- * password file.
- */
-			PBEKeySpec pbe = new PBEKeySpec(rawKey, salt, pbkdf2iterations, AES_KEY_BITS);
-			SecretKeyFactory kFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-			byte[] rawDerivedKey = kFactory.generateSecret(pbe).getEncoded();
-
-			Cipher cipher = Cipher.getInstance(CRYPTO_TRANSFORMATION);
-			cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawDerivedKey, CRYPTO_ALGORITHM), new IvParameterSpec(iv));
-
-			byte[] decrypted = cipher.doFinal(data);
-
-			contents = new String(decrypted, Charset.forName("UTF-8"));
-		}
-		catch (BadPaddingException e)
-		{
-			return null;
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		return contents;
-	}
-}
 
 public class PasswordManager extends JFrame
 {
@@ -361,7 +90,8 @@ public class PasswordManager extends JFrame
 
 	private static final String dirName = ".PassMan";
 	private static final String appName = "Password Manager";
-	private static final int mainWindowWidth = 550;
+	private static final String ICONS_DIR = "src/main/resources/icons";
+	private static final int mainWindowWidth = 620;
 	private static final int mainWindowHeight = 520;
 
 /*
@@ -398,39 +128,40 @@ public class PasswordManager extends JFrame
 /*
  * Paths to icons.
  */
-	private static final String analysis128 = "./Images/analysis_128x128.png";
-	private static final String locked128 = "./Images/locked_128x128.png";
-	private static final String secret128 = "./Images/secret_128x128.png";
-	private static final String success128 = "./Images/success_128x128.png";
-	private static final String unlocked128 = "./Images/unlocked_128x128.png";
-	private static final String settings128 = "./Images/settings_128x128.png";
-	private static final String safe128 = "./Images/safe_128x128.png";
-	private static final String shield128 = "./Images/shield_128x128.png";
+	private static final String analysis128 = ICONS_DIR + "/analysis_128x128.png";
+	private static final String locked128 = ICONS_DIR + "/locked_128x128.png";
+	private static final String secret128 = ICONS_DIR + "/secret_128x128.png";
+	private static final String success128 = ICONS_DIR + "/success_128x128.png";
+	private static final String unlocked128 = ICONS_DIR + "/unlocked_128x128.png";
+	private static final String settings128 = ICONS_DIR + "/settings_128x128.png";
+	private static final String safe128 = ICONS_DIR + "/safe_128x128.png";
+	private static final String shield128 = ICONS_DIR + "/shield_128x128.png";
 
-	private static final String add80 = "./Images/add_80x80.png";
-	private static final String bin80 = "./Images/bin_80x80.png";
-	private static final String change80 = "./Images/change_80x80.png";
-	private static final String view80 = "./Images/view_80x80.png";
+	private static final String add80 = ICONS_DIR + "/add_80x80.png";
+	private static final String bin80 = ICONS_DIR + "/bin_80x80.png";
+	private static final String change80 = ICONS_DIR + "/change_80x80.png";
+	private static final String view80 = ICONS_DIR + "/view_80x80.png";
 
-	private static final String locked64 = "./Images/locked_64x64.png";
-	private static final String add64 = "./Images/add_64x64.png";
-	private static final String bin64 = "./Images/bin_64x64.png";
-	private static final String change64 = "./Images/change_64x64.png";
-	private static final String edit64 = "./Images/edit_64x64.png";
-	private static final String view64 = "./Images/view_64x64.png";
-	private static final String cog64 = "./Images/cog_64x64.png";
-	private static final String confirm64 = "./Images/confirm_64x64.png";
-	private static final String search64 = "./Images/search_64x64.png";
+	private static final String locked64 = ICONS_DIR + "/locked_64x64.png";
+	private static final String add64 = ICONS_DIR + "/add_64x64.png";
+	private static final String bin64 = ICONS_DIR + "/bin_64x64.png";
+	private static final String change64 = ICONS_DIR + "/change_64x64.png";
+	private static final String edit64 = ICONS_DIR + "/edit_64x64.png";
+	private static final String view64 = ICONS_DIR + "/view_64x64.png";
+	private static final String cog64 = ICONS_DIR + "/cog_64x64.png";
+	private static final String confirm64 = ICONS_DIR + "/confirm_64x64.png";
+	private static final String search64 = ICONS_DIR + "/search_64x64.png";
 
-	private static final String add32 = "./Images/add_32x32.png";
-	private static final String bin32 = "./Images/bin_32x32.png";
-	private static final String change32 = "./Images/change_32x32.png";
-	private static final String cog32 = "./Images/cog_32x32.png";
-	private static final String edit32 = "./Images/edit_32x32.png";
-	private static final String view32 = "./Images/view_32x32.png";
-	private static final String info32 = "./Images/info_32x32.png";
+	private static final String add32 = ICONS_DIR + "/add_32x32.png";
+	private static final String bin32 = ICONS_DIR + "/bin_32x32.png";
+	private static final String change32 = ICONS_DIR + "/change_32x32.png";
+	private static final String cog32 = ICONS_DIR + "/cog_32x32.png";
+	private static final String edit32 = ICONS_DIR + "/edit_32x32.png";
+	private static final String view32 = ICONS_DIR + "/view_32x32.png";
+	private static final String info32 = ICONS_DIR + "/info_32x32.png";
 
-	private static final String copy32 = "./Images/copy_32x32.png";
+	private static final String copy32 = ICONS_DIR + "/copy_32x32.png";
+	private static final String backup32 = ICONS_DIR + "/drive_32x32.png";
 
 	private static ImageIcon iconAnalysis128 = null;
 	private static ImageIcon iconLocked128 = null;
@@ -465,6 +196,7 @@ public class PasswordManager extends JFrame
 	private static ImageIcon iconInfo32 = null;
 
 	private static ImageIcon iconCopy32 = null;
+	private static ImageIcon iconBackup32 = null;
 
 /*
 	private static final byte[] asciiChars = {
@@ -561,6 +293,7 @@ public class PasswordManager extends JFrame
 	private static final int STRING_CHANGE_USERNAME = 58;
 	private static final int STRING_CHANGE_PASSWORD = 59;
 	private static final int STRING_PASTE = 60;
+	private static final int STRING_OLD_PASSWORD = 61;
 
 	private static Map<Integer,String> getLanguageStringsKorean()
 	{
@@ -571,6 +304,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_USERNAME, "사용자 이름");
 		map.put(STRING_PASSWORD, "비밀번호");
 		map.put(STRING_NEW_PASSWORD, "새 비밀번호");
+		map.put(STRING_OLD_PASSWORD, "기존 비밀번호");
 		map.put(STRING_PASSWORD_LENGTH, "비밀번호 길이 (8 - 100)");
 		map.put(STRING_MASTER_PASSWORD, "마스터 비밀번호");
 		map.put(STRING_UNLOCK_PASSWORD_FILE, "비밀번호 파일을 잠금 해제하기");
@@ -578,7 +312,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_COPY_PASSWORD, "클립보드에게 비밀번호를 복사하기");
 		map.put(STRING_CHANGE_SETTINGS, "설정 변경");
 		map.put(STRING_CURRENT_PASSWORD, "현재 비밀번호 입력");
-		//map.put(STRING_NEW_PASSWORD, "새 비밀번호 입력");
+		//map.put(STRING_ENTER_NEW_PASSWORD, "새 비밀번호 입력");
 		map.put(STRING_CONFIRM_NEW_PASSWORD, "새 비밀번호 재입력");
 		map.put(STRING_CONFIRM_PASSWORD, "비밀번호 재입력");
 		map.put(STRING_CHANGE_MASTER_PASSWORD, "마스터 비밀번호 변경");
@@ -653,6 +387,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_USERNAME, "Pseudo");
 		map.put(STRING_PASSWORD, "Mot de passe");
 		map.put(STRING_NEW_PASSWORD, "Nouveau mot de passe");
+		map.put(STRING_OLD_PASSWORD, "Ancien mot de passe");
 		map.put(STRING_PASSWORD_LENGTH, "Longueur du mot de passe (8 - 100)");
 		map.put(STRING_MASTER_PASSWORD, "Mot de passe maître");
 		map.put(STRING_CREATION_TIME, "Crée");
@@ -739,6 +474,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_USERNAME, "Username");
 		map.put(STRING_PASSWORD, "Password");
 		map.put(STRING_NEW_PASSWORD, "New password");
+		map.put(STRING_OLD_PASSWORD, "Old password");
 		map.put(STRING_PASSWORD_LENGTH, "Password length (8 - 100)");
 		map.put(STRING_MASTER_PASSWORD, "Master password");
 		map.put(STRING_CREATION_TIME, "Created");
@@ -823,6 +559,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_USERNAME, "Nama lengguna");
 		map.put(STRING_PASSWORD, "Kata laluan");
 		map.put(STRING_NEW_PASSWORD, "Kata laluan baru");
+		map.put(STRING_OLD_PASSWORD, "Kata laluan lama");
 		map.put(STRING_PASSWORD_LENGTH, "Panjang kata laluan (8 - 100)");
 		map.put(STRING_MASTER_PASSWORD, "Kata laluan induk");
 		map.put(STRING_CREATION_TIME, "Dicipta");
@@ -945,6 +682,7 @@ public class PasswordManager extends JFrame
 		iconView64 = new ImageIcon(view64);
 		iconCog64 = new ImageIcon(cog64);
 		iconConfirm64 = new ImageIcon(confirm64);
+		iconSearch64 = new ImageIcon(search64);
 
 		iconAdd32 = new ImageIcon(add32);
 		iconBin32 = new ImageIcon(bin32);
@@ -955,6 +693,7 @@ public class PasswordManager extends JFrame
 		iconInfo32 = new ImageIcon(info32);
 
 		iconCopy32 = new ImageIcon(copy32);
+		iconBackup32 = new ImageIcon(backup32);
 	}
 
 	private void showCharacterSet()
@@ -3846,7 +3585,7 @@ public class PasswordManager extends JFrame
 
 		Container contentPane = getContentPane();
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(mainWindowWidth, mainWindowHeight);
+		setSize(mainWindowWidth, mainWindowHeight+75);
 		setTitle(currentLanguage.get(STRING_APPLICATION_NAME) + " v" + VERSION);
 
 // global var
@@ -3864,6 +3603,7 @@ public class PasswordManager extends JFrame
 		JButton buttonRemove = new JButton(iconBin64);
 		JButton buttonSet = new JButton(iconCog64);
 		JButton buttonSearch = new JButton(iconSearch64);
+		JButton buttonBackup = new JButton(iconBackup32); // google drive icon
 
 		Color colorButton = new Color(240, 240, 240);
 
@@ -3873,6 +3613,7 @@ public class PasswordManager extends JFrame
 		buttonRemove.setBackground(colorButton);
 		buttonSet.setBackground(colorButton);
 		buttonSearch.setBackground(colorButton);
+		buttonBackup.setBackground(colorButton);
 
 /*
 		buttonAdd.setBorder(null);
@@ -3880,6 +3621,7 @@ public class PasswordManager extends JFrame
 		buttonChange.setBorder(null);
 		buttonRemove.setBorder(null);
 		buttonSet.setBorder(null);
+		buttonSearch.setBorder(null);
 */
 
 		final int nrButtons = 6;
@@ -3949,7 +3691,7 @@ public class PasswordManager extends JFrame
 
 		JScrollPane scrollPane = new JScrollPane(panelIds, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
-		final int scrollPaneWidth = 300;
+		final int scrollPaneWidth = 400;
 		final int scrollPaneHeight = 175;
 
 		scrollPane.setPreferredSize(new Dimension(scrollPaneWidth, scrollPaneHeight));
@@ -3982,10 +3724,13 @@ public class PasswordManager extends JFrame
 		spring.putConstraint(SpringLayout.WEST, scrollPane, HORIZONTAL_GAP, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, scrollPane, north, SpringLayout.NORTH, contentPane);
 
+		spring.putConstraint(SpringLayout.WEST, buttonBackup, HORIZONTAL_GAP+scrollPaneWidth+10, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, buttonBackup, north+5, SpringLayout.NORTH, contentPane);
+
 		north += scrollPaneHeight + VERTICAL_GAP;
 
 		//spring.putConstraint(SpringLayout.WEST, panelButtons, (HORIZONTAL_GAP>>1) + scrollPaneWidth + 60, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.WEST, panelButtons, 60, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, panelButtons, 20, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, panelButtons, north, SpringLayout.NORTH, contentPane);
 		//spring.putConstraint(SpringLayout.NORTH, panelButtons, north-15, SpringLayout.NORTH, contentPane);
 
@@ -3995,6 +3740,7 @@ public class PasswordManager extends JFrame
 		contentPane.add(taAppName);
 		contentPane.add(labelPasswordIds);
 		contentPane.add(scrollPane);
+		contentPane.add(buttonBackup); // gdrive icon
 		contentPane.add(panelButtons);
 
 		setLocationRelativeTo(null);
@@ -4069,6 +3815,22 @@ public class PasswordManager extends JFrame
 			public void actionPerformed(ActionEvent event)
 			{
 				doChangeDetails();
+			}
+		});
+
+		buttonBackup.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				try
+				{
+					GDriveBackup gbackup = new GDriveBackup();
+					gbackup.doFileBackup(passwordFile);
+				}
+				catch (Exception e)
+				{
+					showErrorDialog("Failed to backup password file to google drive");
+				}
 			}
 		});
 	}
