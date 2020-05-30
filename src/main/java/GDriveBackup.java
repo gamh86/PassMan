@@ -104,6 +104,7 @@ public class GDriveBackup
 		try
 		{
 			name = removePathPart(path);
+			name += "_passwordfile_backup";
 		}
 		catch (UnsupportedEncodingException e)
 		{
@@ -111,11 +112,10 @@ public class GDriveBackup
 			e.printStackTrace();
 		}
 
-		fMeta.setName(removePathPart(path));
-		fMeta.setOwnedByMe(true);
+		fMeta.setName(name);
+		//fMeta.setOwnedByMe(true); // << This was causing a 403 Forbidden error (field not writeable)
 
 		com.google.api.services.drive.model.File gFile = service.files().create(fMeta, content)
-			.setFields("id")
 			.execute();
 
 		System.out.println("Created file on GDrive: " + gFile.getId());
