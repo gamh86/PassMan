@@ -116,14 +116,9 @@ public class AESCrypt
 
 			Base64.Encoder base = Base64.getEncoder();
 
-			//System.out.println("Password: " + key);
-			//System.out.println("    Salt: " + base.encodeToString(salt));
-
 			PBEKeySpec pbe = new PBEKeySpec(rawKey, salt, PBKDF2_ITERATIONS, AES_KEY_BITS);
 			SecretKeyFactory kFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
 			byte[] rawDerivedKey = kFactory.generateSecret(pbe).getEncoded();
-
-			//System.out.println("PBKDF2-derived key: " + base.encodeToString(rawDerivedKey));
 
 			iv = generateIV();
 
@@ -145,10 +140,6 @@ public class AESCrypt
 			System.arraycopy(iv, 0, outData, offsetIv, IV_LENGTH);
 			System.arraycopy(salt, 0, outData, offsetSalt, SALT_LENGTH);
 			System.arraycopy(result, 0, outData, offsetData, result.length);
-
-			System.out.println("            IV: " + base.encodeToString(iv));
-			System.out.println("Encrypted Data: " + base.encodeToString(result));
-			System.out.println("      Together: " + base.encodeToString(outData));
 
 			File fObj = new File(path);
 			FileOutputStream fOut = new FileOutputStream(fObj, false);
@@ -188,14 +179,9 @@ public class AESCrypt
 
 			Base64.Encoder base = Base64.getEncoder();
 
-			//System.out.println("Password: " + key);
-			//System.out.println("    Salt: " + base.encodeToString(salt));
-
 			PBEKeySpec pbe = new PBEKeySpec(rawKey, salt, PBKDF2_ITERATIONS, AES_KEY_BITS);
 			SecretKeyFactory kFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
 			byte[] rawDerivedKey = kFactory.generateSecret(pbe).getEncoded();
-
-			//System.out.println("PBKDF2-derived key: " + base.encodeToString(rawDerivedKey));
 
 			iv = generateIV();
 
