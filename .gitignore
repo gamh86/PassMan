@@ -4,3 +4,4 @@
 PasswordManager
 *.json
 StoredCredential
+tokens/*
