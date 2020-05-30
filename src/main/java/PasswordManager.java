@@ -1,6 +1,12 @@
 import aescrypt.*;
 import backup.*; // for our GDriveBackup class
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.io.File;
 import java.io.FileReader; /* for reading streams of characters */
 import java.io.FileInputStream; /* for reading raw bytes (binary data) */
@@ -9,6 +15,9 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.io.BufferedReader;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import java.lang.Math;
 
@@ -29,6 +38,8 @@ import java.util.TimeZone;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+
+import java.security.GeneralSecurityException;
 
 import java.awt.*;
 import java.awt.datatransfer.StringSelection; // for copying text to clipboard
@@ -57,9 +68,6 @@ import javax.swing.DefaultListSelectionModel;
 	is finished: components removed, frame disposed, and
 	this problem does _not_ occur in that case...
 
-	Use a third party library for JSON support for serializing
-	entries in the password file.
-
 	Find a better way to position elements within windows that
 	will keep a fairly consistent view on all OS's (on Windows,
 	some elements do not appear centred and the clipboard button
@@ -71,12 +79,43 @@ import javax.swing.DefaultListSelectionModel;
 	details frames.
 */
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+class PasswordEntry
+{
+	@JsonProperty
+	private String id;
+	@JsonProperty
+	private String password;
+	@JsonProperty
+	private String username;
+	@JsonProperty
+	private long timestamp;
+	@JsonProperty
+	private int sizeCharacterSet; // so we can calculate stats in doAnalysePassword()
+
+	public PasswordEntry() { }
+
+	public String getId() { return id; }
+	public String getPassword() { return password; }
+	public String getUsername() { return username; }
+	public long getTimestamp() { return timestamp; }
+	public int getCharsetSize() { return sizeCharacterSet; }
+
+	public void setId(String newId) { id = newId; }
+	public void setPassword(String newPass) { password = newPass; }
+	public void setUsername(String newUsername) { username = newUsername; }
+	public void setTimestamp(long newTimestamp) { timestamp = newTimestamp; }
+	public void setCharsetSize(int size) { sizeCharacterSet = size; }
+}
+
 public class PasswordManager extends JFrame
 {
 	private static final String VERSION = "1.0.1";
 	private String passwordDirectory = null;
 	private String passwordFile = null;
 	private String configFile = null;
+
+	private ObjectMapper mapper;
 
 	private String userHome = null;
 	private String userName = null;
@@ -162,6 +201,7 @@ public class PasswordManager extends JFrame
 
 	private static final String copy32 = ICONS_DIR + "/copy_32x32.png";
 	private static final String backup32 = ICONS_DIR + "/drive_32x32.png";
+	private static final String search32 = ICONS_DIR + "/search_32x32.png";
 
 	private static ImageIcon iconAnalysis128 = null;
 	private static ImageIcon iconLocked128 = null;
@@ -197,6 +237,7 @@ public class PasswordManager extends JFrame
 
 	private static ImageIcon iconCopy32 = null;
 	private static ImageIcon iconBackup32 = null;
+	private static ImageIcon iconSearch32 = null;
 
 /*
 	private static final byte[] asciiChars = {
@@ -295,6 +336,9 @@ public class PasswordManager extends JFrame
 	private static final int STRING_PASTE = 60;
 	private static final int STRING_OLD_PASSWORD = 61;
 
+	private static final int STRING_CREATE_BACKUP_FILE = 62;
+	private static final int STRING_PROMPT_CREATED_BACKUP_FILE = 63;
+
 	private static Map<Integer,String> getLanguageStringsKorean()
 	{
 		Map<Integer,String> map = new HashMap<Integer,String>();
@@ -334,6 +378,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_CHANGE_USERNAME, "사용자 이름 변경");
 		map.put(STRING_CHANGE_PASSWORD, "비밀번호 변경");
 		map.put(STRING_PASTE, "붙이");
+		map.put(STRING_CREATE_BACKUP_FILE, "백업 파일을 만듭니다");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "비밀번호 관리자 설정");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "비밀번호 설경");
@@ -352,6 +397,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_PROMPT_CANCEL, "취소");
 		map.put(STRING_PROMPT_CHANGED_LANGUAGE, "언어를 변경되었습니다");
 		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE, "마스터 비밀번호를 입력");//하십시오");
+		map.put(STRING_PROMPT_CREATED_BACKUP_FILE, "백업 파일을 만듭니되었습니다");
 
 		map.put(STRING_ERROR_PASSWORD_ID, "이 아이디의 비밀번호를 변경하될 수 없었습니다");
 		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "비밀번호가 이미 존재합니다");
@@ -417,6 +463,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_CHANGE_USERNAME, "Modifier Pseudo");
 		map.put(STRING_CHANGE_PASSWORD, "Modifier Mot de Passe");
 		map.put(STRING_PASTE, "Coller");
+		map.put(STRING_CREATE_BACKUP_FILE, "Créer fichier de sauvegarde");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Détails du mot de passe");
@@ -435,6 +482,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_PROMPT_CANCEL, "Annuler");
 		map.put(STRING_PROMPT_CHANGED_LANGUAGE, "La langue a été changée");
 		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE, "Saisir mot de passe maître");
+		map.put(STRING_PROMPT_CREATED_BACKUP_FILE, "Fichier de sauvegarde a été créée");
 
 		map.put(STRING_ERROR_PASSWORD_ID, "Le mot de passe pour cet ID n'a pas pu être mis à jour");
 		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "Il y a déjà un mot de passe avec cet ID");
@@ -504,6 +552,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_CHANGE_USERNAME, "Modify Username");
 		map.put(STRING_CHANGE_PASSWORD, "Modify Password");
 		map.put(STRING_PASTE, "Paste");
+		map.put(STRING_CREATE_BACKUP_FILE, "Create backup file");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Password Manager Configuration");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Password Details");
@@ -523,6 +572,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_PROMPT_CANCEL, "Cancel");
 		map.put(STRING_PROMPT_CHANGED_LANGUAGE, "Language changed");
 		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE, "Enter master password");
+		map.put(STRING_PROMPT_CREATED_BACKUP_FILE, "Created backup file");
 
 		map.put(STRING_ERROR_PASSWORD_ID, "Could not change password for this ID");
 		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "");
@@ -589,6 +639,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_CHANGE_USERNAME, "Ubah lengguna");
 		map.put(STRING_CHANGE_PASSWORD, "Ubah kata laluan");
 		map.put(STRING_PASTE, "Tampal");
+		map.put(STRING_CREATE_BACKUP_FILE, "Buat fail sandaran");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Konfigurasi Pengurus Kata Laluan");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Butiran Kata Laluan");
@@ -607,6 +658,7 @@ public class PasswordManager extends JFrame
 		map.put(STRING_PROMPT_CANCEL, "Batalkan");
 		map.put(STRING_PROMPT_CHANGED_LANGUAGE, "Bahasa diubah");
 		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE, "Masukkan kata laluan induk");
+		map.put(STRING_PROMPT_CREATED_BACKUP_FILE, "Fail sandaran dibuat");
 
 		map.put(STRING_ERROR_PASSWORD_ID, "Kata laluan tidak boleh diubah untuk ID ini. ");
 		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "Kata laluan untuk ID ini sudah wujud.");
@@ -694,6 +746,7 @@ public class PasswordManager extends JFrame
 
 		iconCopy32 = new ImageIcon(copy32);
 		iconBackup32 = new ImageIcon(backup32);
+		iconSearch32 = new ImageIcon(search32);
 	}
 
 	private void showCharacterSet()
@@ -933,6 +986,45 @@ public class PasswordManager extends JFrame
 	{
 		assert(null != passwordEntryList);
 
+		String jsonData = null;
+
+		try
+		{
+			jsonData = mapper.writeValueAsString(passwordEntryList);
+		}
+		catch (JsonProcessingException e1)
+		{
+			e1.printStackTrace();
+			System.err.println(e1.getMessage());
+
+			return;
+		}
+
+		try
+		{
+			AESCrypt aes = new AESCrypt();
+
+			byte[] rawEncrypted = aes.encryptData(jsonData, password);
+			File fObj = new File(passwordFile);
+
+			FileOutputStream fOut = new FileOutputStream(fObj, false);
+
+			overwriteFileContents(fOut, fObj.length());
+
+			fOut.getChannel().truncate(0);
+			fOut.write(rawEncrypted);
+			fOut.flush();
+			fOut.close();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+/*
+		System.out.println(jsonData);
+
 		Iterator<PasswordEntry> iter = passwordEntryList.iterator();
 		String outContents = "";
 
@@ -972,6 +1064,106 @@ public class PasswordManager extends JFrame
 			e.printStackTrace();
 			System.exit(1);
 		}
+*/
+	}
+
+	private void createPasswordEntryList()
+	{
+		if (false == fileContentsCached || null == fContents)
+			getFileContents(passwordFile);
+
+		try
+		{
+			com.fasterxml.jackson.core.type.TypeReference typeRef = new
+				com.fasterxml.jackson.core.type.TypeReference<ArrayList<PasswordEntry>>() {};
+
+			byte[] data = fContents.getBytes("UTF-8");
+			passwordEntryList = (ArrayList<PasswordEntry>)mapper.readValue(data, typeRef);
+		}
+		catch (Exception e)
+		{
+			System.err.println(e.getMessage());
+			e.printStackTrace();
+		}
+
+/*
+		passwordEntryList = new ArrayList<PasswordEntry>();
+		String line = null;
+		byte[] rawContents = null;
+		ByteBuffer bufContents = null;
+
+		try
+		{
+			rawContents = fContents.getBytes("UTF-8");
+			bufContents = ByteBuffer.wrap(rawContents);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		while ((line = getNextLine(bufContents)) != null)
+		{
+			int pos = 0;
+			int start = 0;
+			byte[] rawLine = null;
+
+			try
+			{
+				rawLine = line.getBytes("UTF-8");
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+				System.exit(1);
+			}
+
+			while (rawLine[pos] != (byte)'|' && pos < rawLine.length)
+				++pos;
+
+			byte[] rawId = new byte[pos];
+			System.arraycopy(rawLine, start, rawId, 0, pos);
+
+			start = ++pos;
+
+			while (rawLine[pos] != (byte)'|' && pos < rawLine.length)
+				++pos;
+
+			byte[] rawUsername = new byte[pos - start];
+			System.arraycopy(rawLine, start, rawUsername, 0, pos - start);
+
+			start = ++pos;
+
+			while (rawLine[pos] != (byte)'|' && pos < rawLine.length)
+				++pos;
+
+			byte[] rawPassword = new byte[pos - start];
+			System.arraycopy(rawLine, start, rawPassword, 0, pos - start);
+
+			start = ++pos;
+			while (rawLine[pos] != (byte)'|' && pos < rawLine.length)
+				++pos;
+
+			byte[] rawTimestamp = new byte[pos - start];
+			System.arraycopy(rawLine, start, rawTimestamp, 0, pos - start);
+
+			String strTimestamp = new String(rawTimestamp);
+
+			start = ++pos;
+			pos = rawLine.length;
+
+			byte[] rawSizeCharSet = new byte[pos - start];
+			System.arraycopy(rawLine, start, rawSizeCharSet, 0, pos - start);
+
+			String sizeCharSetString = new String(rawSizeCharSet);
+
+			PasswordEntry entry = new PasswordEntry(new String(rawId), new String(rawUsername), new String(rawPassword), Long.parseLong(strTimestamp, 10), Integer.parseInt(sizeCharSetString));
+			passwordEntryList.add(entry);
+		}
+*/
+
+		return;
 	}
 
 	/**
@@ -1123,88 +1315,7 @@ public class PasswordManager extends JFrame
 		return new String(rawLine);
 	}
 
-	private void createPasswordEntryList()
-	{
-		if (false == fileContentsCached || null == fContents)
-			getFileContents(passwordFile);
 
-		passwordEntryList = new ArrayList<PasswordEntry>();
-		String line = null;
-		byte[] rawContents = null;
-		ByteBuffer bufContents = null;
-
-		try
-		{
-			rawContents = fContents.getBytes("UTF-8");
-			bufContents = ByteBuffer.wrap(rawContents);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		while ((line = getNextLine(bufContents)) != null)
-		{
-			int pos = 0;
-			int start = 0;
-			byte[] rawLine = null;
-
-			try
-			{
-				rawLine = line.getBytes("UTF-8");
-			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-				System.exit(1);
-			}
-
-			while (rawLine[pos] != (byte)'|' && pos < rawLine.length)
-				++pos;
-
-			byte[] rawId = new byte[pos];
-			System.arraycopy(rawLine, start, rawId, 0, pos);
-
-			start = ++pos;
-
-			while (rawLine[pos] != (byte)'|' && pos < rawLine.length)
-				++pos;
-
-			byte[] rawUsername = new byte[pos - start];
-			System.arraycopy(rawLine, start, rawUsername, 0, pos - start);
-
-			start = ++pos;
-
-			while (rawLine[pos] != (byte)'|' && pos < rawLine.length)
-				++pos;
-
-			byte[] rawPassword = new byte[pos - start];
-			System.arraycopy(rawLine, start, rawPassword, 0, pos - start);
-
-			start = ++pos;
-			while (rawLine[pos] != (byte)'|' && pos < rawLine.length)
-				++pos;
-
-			byte[] rawTimestamp = new byte[pos - start];
-			System.arraycopy(rawLine, start, rawTimestamp, 0, pos - start);
-
-			String strTimestamp = new String(rawTimestamp);
-
-			start = ++pos;
-			pos = rawLine.length;
-
-			byte[] rawSizeCharSet = new byte[pos - start];
-			System.arraycopy(rawLine, start, rawSizeCharSet, 0, pos - start);
-
-			String sizeCharSetString = new String(rawSizeCharSet);
-
-			PasswordEntry entry = new PasswordEntry(new String(rawId), new String(rawUsername), new String(rawPassword), Long.parseLong(strTimestamp, 10), Integer.parseInt(sizeCharSetString));
-			passwordEntryList.add(entry);
-		}
-
-		return;
-	}
 
 	/**
 	 * XXX - May be better to just show this in the showdetails window...
@@ -1275,7 +1386,7 @@ public class PasswordManager extends JFrame
 		double INSTRUCTIONS_PER_ATTEMPT = 5.0;
 		double ATTEMPTS_PER_SECOND = (INSTRUCTIONS_PER_SECOND / INSTRUCTIONS_PER_ATTEMPT);
 
-		double nrPermutations = Math.pow((double)entry.getSizeCharacterSet(), (double)entry.getPassword().length());
+		double nrPermutations = Math.pow((double)entry.getCharsetSize(), (double)entry.getPassword().length());
 
 	/*
 	 * On average, one crack a password after testing half.
@@ -1287,7 +1398,7 @@ public class PasswordManager extends JFrame
 
 		JTextField tfPermutations = new JTextField(String.format("%6.3e", nrPermutations));
 		JTextField tfPasswordLen = new JTextField(String.format("%d", entry.getPassword().length()));
-		JTextField tfSizeCharacterSet = new JTextField(String.format("%d", entry.getSizeCharacterSet()));
+		JTextField tfSizeCharacterSet = new JTextField(String.format("%d", entry.getCharsetSize()));
 		JTextField tfCrackTimeSeconds = new JTextField(String.format("%.3e " + currentLanguage.get(STRING_SECONDS), secondsToCrack));
 		JTextField tfCrackTimeDays = new JTextField(String.format("%.3e " + currentLanguage.get(STRING_DAYS), daysToCrack));
 		JTextField tfCrackTimeYears = new JTextField(String.format("%.3e " + currentLanguage.get(STRING_YEARS), yearsToCrack));
@@ -2784,7 +2895,13 @@ public class PasswordManager extends JFrame
 					newPassword = tfPassword.getText();
 				}
 
-				PasswordEntry newEntry = new PasswordEntry(tfId.getText(), tfUsername.getText(), newPassword, System.currentTimeMillis(), characterSet.size());
+				PasswordEntry newEntry = new PasswordEntry();
+
+				newEntry.setId(tfId.getText());
+				newEntry.setUsername(tfUsername.getText());
+				newEntry.setPassword(newPassword);
+				newEntry.setTimestamp(System.currentTimeMillis());
+				newEntry.setCharsetSize(characterSet.size());
 
 				if (true == fileContentsCached)
 				{
@@ -3362,34 +3479,6 @@ public class PasswordManager extends JFrame
 					return;
 				}
 
-			/*
-			 * First line could be "\n" or "\r\n", so skip
-	 		 * ahead until we find alpha-numeric values.
-	 		 */
-				try
-				{
-					byte[] rawContents = fContents.getBytes("UTF-8");
-					int pos = 0;
-
-					if (rawContents.length > 0)
-					{
-						while (false == isAlphaNumericByte(rawContents[pos]) && pos < rawContents.length)
-							++pos;
-
-						if (pos > 0)
-						{
-							byte[] rawNew = new byte[rawContents.length - pos];
-							System.arraycopy(rawContents, pos, rawNew, 0, rawContents.length - pos);
-							fContents = new String(rawNew);
-						}
-					}
-				}
-				catch (Exception e)
-				{
-					e.printStackTrace();
-					System.exit(1);
-				}
-
 				fileContentsCached = true;
 				createPasswordEntryList();
 
@@ -3597,12 +3686,12 @@ public class PasswordManager extends JFrame
 
 		JLabel unlockedContainer = new JLabel(iconShield128);
 
-		JButton buttonAdd = new JButton(iconAdd64);
-		JButton buttonView = new JButton(iconView64);
-		JButton buttonChange = new JButton(iconChange64);
-		JButton buttonRemove = new JButton(iconBin64);
-		JButton buttonSet = new JButton(iconCog64);
-		JButton buttonSearch = new JButton(iconSearch64);
+		JButton buttonAdd = new JButton(iconAdd32);
+		JButton buttonView = new JButton(iconView32);
+		JButton buttonChange = new JButton(iconChange32);
+		JButton buttonRemove = new JButton(iconBin32);
+		JButton buttonSet = new JButton(iconCog32);
+		JButton buttonSearch = new JButton(iconSearch32);
 		JButton buttonBackup = new JButton(iconBackup32); // google drive icon
 
 		Color colorButton = new Color(240, 240, 240);
@@ -3614,6 +3703,8 @@ public class PasswordManager extends JFrame
 		buttonSet.setBackground(colorButton);
 		buttonSearch.setBackground(colorButton);
 		buttonBackup.setBackground(colorButton);
+
+		buttonBackup.setBorder(null);
 
 /*
 		buttonAdd.setBorder(null);
@@ -3651,6 +3742,41 @@ public class PasswordManager extends JFrame
 		panelIds.setLayout(new GridLayout(0, 1));
 
 /*
+		final int nrColumns = 3;
+		Object[] columnNames = { "Password ID", "Created", "Stale" };
+		DefaultTableModel model = new DefaultTableModel(columnNames, nrColumns);
+
+		JTable table = new JTable(model);
+		JScrollPane scrollPane = new JScrollPane(table,
+			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+			JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+		final int tableWidth = 550;
+		final int tableHeight = 200;
+		Dimension sizeTable = new Dimension(tableWidth, tableHeight);
+
+		scrollPane.setPreferredSize(sizeTable);
+
+		table.setPreferredSize(sizeTable);
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		table.setFont(fontTable);
+		table.setForeground(colorTable);
+		table.setBackground(ColorFrame);
+
+		table.setCellSelectionEnabled(true);
+		table.getSelectionModel()
+			.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+		table
+			.getSelectionModel()
+			.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent event)
+			{
+			}
+		});
+
+
 	XXX	DO NOT DELETE: KEEP FOR FUTURE REFERENCE FOR MAKING A SCROLLING PANE
 
 
@@ -3719,20 +3845,18 @@ public class PasswordManager extends JFrame
 		spring.putConstraint(SpringLayout.WEST, labelPasswordIds, 50, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelPasswordIds, north, SpringLayout.NORTH, contentPane);
 
-		north += VERTICAL_GAP_LABEL;
+		north += VERTICAL_GAP_LABEL+10;
 
 		spring.putConstraint(SpringLayout.WEST, scrollPane, HORIZONTAL_GAP, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, scrollPane, north, SpringLayout.NORTH, contentPane);
 
-		spring.putConstraint(SpringLayout.WEST, buttonBackup, HORIZONTAL_GAP+scrollPaneWidth+10, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, buttonBackup, north+5, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.WEST, buttonBackup, HORIZONTAL_GAP+scrollPaneWidth-40, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, buttonBackup, north-40, SpringLayout.NORTH, contentPane);
 
-		north += scrollPaneHeight + VERTICAL_GAP;
+		north += scrollPaneHeight+15;
 
-		//spring.putConstraint(SpringLayout.WEST, panelButtons, (HORIZONTAL_GAP>>1) + scrollPaneWidth + 60, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.WEST, panelButtons, 20, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, panelButtons, HORIZONTAL_GAP, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, panelButtons, north, SpringLayout.NORTH, contentPane);
-		//spring.putConstraint(SpringLayout.NORTH, panelButtons, north-15, SpringLayout.NORTH, contentPane);
 
 		contentPane.setLayout(spring);
 
@@ -3827,10 +3951,16 @@ public class PasswordManager extends JFrame
 					GDriveBackup gbackup = new GDriveBackup();
 					gbackup.doFileBackup(passwordFile);
 				}
-				catch (Exception e)
+				catch (IOException e1)
 				{
-					showErrorDialog("Failed to backup password file to google drive");
+					showErrorDialog(e1.getMessage());
 				}
+				catch (GeneralSecurityException e2)
+				{
+					showErrorDialog(e2.getMessage());
+				}
+
+				showInfoDialog(currentLanguage.get(STRING_PROMPT_CREATED_BACKUP_FILE));
 			}
 		});
 	}
@@ -4044,35 +4174,6 @@ public class PasswordManager extends JFrame
 /*
  * Private classes
  */
-	private final class PasswordEntry
-	{
-		private String id;
-		private String pass;
-		private String username;
-		private long timestamp;
-		private int sizeCharacterSet; // so we can calculate stats in doAnalysePassword()
-
-		public PasswordEntry(String _id, String _username, String _pass, long stamp, int sizeCharSet)
-		{
-			id = _id;
-			username = _username;
-			pass = _pass;
-			timestamp = stamp;
-			sizeCharacterSet = sizeCharSet;
-		}
-
-		public String getId() { return id; }
-		public String getPassword() { return pass; }
-		public String getUsername() { return username; }
-		public long getTimestamp() { return timestamp; }
-		public int getSizeCharacterSet() { return sizeCharacterSet; }
-
-		public void setId(String newId) { id = newId; }
-		public void setPassword(String newPass) { pass = newPass; }
-		public void setUsername(String newUsername) { username = newUsername; }
-		public void setTimestamp(long newTimestamp) { timestamp = newTimestamp; }
-		public void setSizeCharacterSet(int size) { sizeCharacterSet = size; }
-	}
 
 	private class RightClickPopup extends JPanel
 	{
@@ -4111,6 +4212,8 @@ public class PasswordManager extends JFrame
 
 	public PasswordManager()
 	{
+		mapper = new ObjectMapper();
+
 		languageStrings.put("English", languageEnglish);
 		languageStrings.put("Français", languageFrench);
 		languageStrings.put("한국어", languageKorean);
