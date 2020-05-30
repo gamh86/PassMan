@@ -1,0 +1,2 @@
+30/05/2020	Add Google Drive icon button to use Google Drive API for pushing backups to drive.
+		Use Jackson to encode the password entries in the file.
