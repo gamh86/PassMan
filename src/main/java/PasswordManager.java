@@ -1629,63 +1629,46 @@ public class PasswordManager extends JFrame
 		buttonInformation.setBackground(colorFrame);
 		buttonInformation.setPreferredSize(new Dimension(iconInfo32.getIconHeight(), iconInfo32.getIconHeight()));
 
-		buttonInformation.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent event)
-			{
-				doAnalysePassword(findPasswordForId(tfId.getText()));
-			}
-		});
+		spring.putConstraint(SpringLayout.WEST,
+			unlockedContainer,
+			(halfWidth - (iconUnlocked128.getIconWidth()>>1)),
+			SpringLayout.WEST,
+			contentPane);
 
-		north = iconUnlocked128.getIconHeight();
-
-		spring.putConstraint(SpringLayout.WEST, unlockedContainer, (halfWidth - (iconUnlocked128.getIconWidth()/2)), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, unlockedContainer, 25, SpringLayout.NORTH, contentPane);
 
-		north += 60;
-
 		spring.putConstraint(SpringLayout.WEST, labelId, 25, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, labelId, north, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, labelId, 60, SpringLayout.SOUTH, unlockedContainer);
 
-		spring.putConstraint(SpringLayout.WEST, tfId, leftOffsetDetails, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, tfId, north, SpringLayout.NORTH, contentPane);
-
-		north += 40;
+		spring.putConstraint(SpringLayout.WEST, tfId, 20, SpringLayout.EAST, labelId);
+		spring.putConstraint(SpringLayout.NORTH, tfId, 60, SpringLayout.SOUTH, unlockedContainer);
 
 		spring.putConstraint(SpringLayout.WEST, labelUsername, 25, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, labelUsername, north, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, labelUsername, 10, SpringLayout.SOUTH, labelId);
 
-		spring.putConstraint(SpringLayout.WEST, tfUsername, leftOffsetDetails, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, tfUsername, north, SpringLayout.NORTH, contentPane);
-
-		north += 40;
+		spring.putConstraint(SpringLayout.WEST, tfUsername, 15, SpringLayout.EAST, labelUsername);
+		spring.putConstraint(SpringLayout.NORTH, tfUsername, 10, SpringLayout.SOUTH, labelId);
 
 		spring.putConstraint(SpringLayout.WEST, labelPass, 25, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, labelPass, north, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, labelPass, 10, SpringLayout.SOUTH, labelUsername);
 
-		spring.putConstraint(SpringLayout.WEST, tfPassword, leftOffsetDetails, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, tfPassword, north, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.WEST, tfPassword, 20, SpringLayout.EAST, labelPass);
+		spring.putConstraint(SpringLayout.NORTH, tfPassword, 10, SpringLayout.SOUTH, labelUsername);
 
-		spring.putConstraint(SpringLayout.WEST, buttonInformation, (windowWidth - iconInfo32.getIconWidth() - 10), SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, buttonInformation, north-10, SpringLayout.NORTH, contentPane);
-
-		north += 40;
+		spring.putConstraint(SpringLayout.EAST, buttonInformation, 40, SpringLayout.EAST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, buttonInformation, 10, SpringLayout.SOUTH, labelUsername);
 
 		spring.putConstraint(SpringLayout.WEST, labelWhen, 25, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, labelWhen, north, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, labelWhen, 10, SpringLayout.SOUTH, labelPass);
 
-		spring.putConstraint(SpringLayout.WEST, tfWhen, leftOffsetDetails, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, tfWhen, north, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.WEST, tfWhen, 20, SpringLayout.EAST, labelWhen);
+		spring.putConstraint(SpringLayout.NORTH, tfWhen, 10, SpringLayout.SOUTH, labelPass);
 
-		north += 40;
+		spring.putConstraint(SpringLayout.EAST, buttonCopy, 20, SpringLayout.EAST, contentPane);
+		spring.putConstraint(SpringLayout.SOUTH, buttonCopy, 45, SpringLayout.SOUTH, contentPane);
 
-		int offsetRightLabelCopy = getStringWidth(labelCopy.getText()) + 10;
-
-		spring.putConstraint(SpringLayout.WEST, labelCopy, windowWidth - offsetRightLabelCopy, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, labelCopy, windowHeight - 60, SpringLayout.NORTH, contentPane);
-
-		spring.putConstraint(SpringLayout.WEST, buttonCopy, windowWidth - iconCopy32.getIconHeight() - 20, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, buttonCopy, windowHeight - iconCopy32.getIconHeight() - 45, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.EAST, labelCopy, 20, SpringLayout.WEST, buttonCopy);
+		spring.putConstraint(SpringLayout.SOUTH, labelCopy, 60, SpringLayout.SOUTH, contentPane);
 
 		contentPane.setLayout(spring);
 
@@ -1714,6 +1697,14 @@ public class PasswordManager extends JFrame
 					.setContents(new StringSelection(entry.getPassword()), null);
 
 				showInfoDialog(currentLanguage.get(STRING_PROMPT_PASSWORD_COPIED));
+			}
+		});
+
+		buttonInformation.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				doAnalysePassword(findPasswordForId(tfId.getText()));
 			}
 		});
 
@@ -3420,7 +3411,7 @@ public class PasswordManager extends JFrame
 			return;
 		}
 
-		showPasswordDetailsForId(currentlySelectedEntry);
+		showPasswordDetails(currentlySelectedEntry);
 	}
 
 	private static int passwordAttempts = 0;
