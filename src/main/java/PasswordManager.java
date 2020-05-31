@@ -148,6 +148,7 @@ public class PasswordManager extends JFrame
 	private static final int MAIN_WINDOW_SCROLLBAR_HEIGHT = (MAIN_WINDOW_HEIGHT - 400);
 
 	private static final long MILLIS_PER_DAY = (86400 * 1000);
+	private static final int DEFAULT_PASSWORD_LIFETIME = 72; // days
 
 /*
  * GUI components that need to be global so we can
@@ -180,7 +181,8 @@ public class PasswordManager extends JFrame
 	private Color colorConfirm = Color.WHITE;//new Color(220, 220, 220);
 	private Color colorFrame = new Color(240, 240, 240);
 	private Color colorLabel = new Color(240, 240, 240);
-	private Color colorButton = new Color(240, 240, 240);
+	private Color colorButton = new Color(255, 255, 255);
+	private Color colorScrollPane = new Color(242, 242, 242);
 
 /*
  * Paths to icons.
@@ -219,6 +221,7 @@ public class PasswordManager extends JFrame
 
 	private static final String copy32 = ICONS_DIR + "/copy_32x32.png";
 	private static final String upload32 = ICONS_DIR + "/upload_32x32.png";
+	private static final String download32 = ICONS_DIR + "/download_32x32.png";
 	private static final String drive32 = ICONS_DIR + "/drive_32x32.png";
 	private static final String search32 = ICONS_DIR + "/search_32x32.png";
 	private static final String unlocked32 = ICONS_DIR + "/unlocked_32x32.png";
@@ -258,6 +261,7 @@ public class PasswordManager extends JFrame
 
 	private static ImageIcon iconCopy32 = null;
 	private static ImageIcon iconUpload32 = null;
+	private static ImageIcon iconDownload32 = null;
 	private static ImageIcon iconGDrive32 = null;
 	private static ImageIcon iconSearch32 = null;
 
@@ -769,6 +773,7 @@ public class PasswordManager extends JFrame
 
 		iconCopy32 = new ImageIcon(copy32);
 		iconUpload32 = new ImageIcon(upload32);
+		iconDownload32 = new ImageIcon(download32);
 		iconGDrive32 = new ImageIcon(drive32);
 		iconSearch32 = new ImageIcon(search32);
 	}
@@ -785,7 +790,6 @@ public class PasswordManager extends JFrame
 		final int leftOffset = ((windowWidth-buttonContainerWidth)>>1);
 		boolean on = true;
 
-		contentPane.setBackground(colorFrame);
 		contentPane.setLayout(spring);
 
 		frame.setSize(windowWidth, windowHeight);
@@ -3733,7 +3737,7 @@ public class PasswordManager extends JFrame
 		}
 	}
 
-	private void showBackupWindow()
+	private void showDownloadBackupWindow()
 	{
 		JFrame frame = new JFrame();
 		SpringLayout spring = new SpringLayout();
@@ -3741,11 +3745,11 @@ public class PasswordManager extends JFrame
 
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.setSize(420, 400);
-		frame.setTitle("Backup Password File"); // currentLanguage.get(STRING_TITLE_BACKUP_PASSWORD_FILE);
+		frame.setTitle("Remote Server Backups"); // currentLanguage.get(STRING_TITLE_BACKUP_PASSWORD_FILE);
 
 		JTextArea taDesc = new JTextArea(
-			"Backup your password file to the following\n" +
-			"storage services.\n");
+			"Retrieve a backup file (if any) from\n" +
+			"a storage server.");
 
 		taDesc.setEditable(false);
 		taDesc.setBackground(frame.getBackground());
@@ -3763,7 +3767,7 @@ public class PasswordManager extends JFrame
 		int sizeIconWidth = iconGDrive32.getIconWidth();
 		int sizeIconHeight = iconGDrive32.getIconHeight();
 
-		spring.putConstraint(SpringLayout.WEST, taDesc, 20, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, taDesc, 40, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, taDesc, north, SpringLayout.NORTH, contentPane);
 
 		north += 80;
@@ -3771,7 +3775,93 @@ public class PasswordManager extends JFrame
 		spring.putConstraint(SpringLayout.WEST, buttonGDrive, 20, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, buttonGDrive, north, SpringLayout.NORTH, contentPane);
 
-		north += (sizeIconHeight/4);
+		north += (sizeIconHeight/5);
+
+		spring.putConstraint(SpringLayout.WEST, labelGDrive, 40+sizeIconWidth, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, labelGDrive, north, SpringLayout.NORTH, contentPane);
+
+		// set content pane layout
+		contentPane.setLayout(spring);
+
+		// add components
+		contentPane.add(taDesc);
+		contentPane.add(buttonGDrive);
+		contentPane.add(labelGDrive);
+
+		//frame.pack();
+		frame.setLocationRelativeTo(null);
+		frame.setVisible(true);
+
+		buttonGDrive.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				try
+				{
+					GDriveBackup gbackup = new GDriveBackup();
+
+					int action = showQuestionDialog(
+						"Warning: This will overwrite the local password file! Do you wish to continue?");
+
+				 	if (JOptionPane.CANCEL_OPTION == action)
+				 		return;
+
+				 	gbackup.doDownloadBackup(passwordFile);
+					showInfoDialog("Retrieved backup file from GDrive");
+				}
+				catch (IOException e1)
+				{
+					showErrorDialog(e1.getMessage());
+				}
+				catch (GeneralSecurityException e2)
+				{
+					showErrorDialog(e2.getMessage());
+				}
+
+				showInfoDialog(currentLanguage.get(STRING_PROMPT_CREATED_BACKUP_FILE));
+			}
+		});
+	}
+
+	private void showBackupWindow()
+	{
+		JFrame frame = new JFrame();
+		SpringLayout spring = new SpringLayout();
+		Container contentPane = frame.getContentPane();
+
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.setSize(420, 400);
+		frame.setTitle("Backup Password File"); // currentLanguage.get(STRING_TITLE_BACKUP_PASSWORD_FILE);
+
+		JTextArea taDesc = new JTextArea(
+			"Backup your password file to a remote\n" +
+			"storage server.\n");
+
+		taDesc.setEditable(false);
+		taDesc.setBackground(frame.getBackground());
+		taDesc.setFont(fontTextField);
+
+		JButton buttonGDrive = new JButton(iconGDrive32);
+
+		buttonGDrive.setBackground(colorButton);
+		buttonGDrive.setBorder(null);
+
+		JLabel labelGDrive = new JLabel("Google Drive");
+		labelGDrive.setFont(fontLabel);
+
+		int north = 40;
+		int sizeIconWidth = iconGDrive32.getIconWidth();
+		int sizeIconHeight = iconGDrive32.getIconHeight();
+
+		spring.putConstraint(SpringLayout.WEST, taDesc, 40, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, taDesc, north, SpringLayout.NORTH, contentPane);
+
+		north += 80;
+
+		spring.putConstraint(SpringLayout.WEST, buttonGDrive, 20, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, buttonGDrive, north, SpringLayout.NORTH, contentPane);
+
+		north += (sizeIconHeight/5);
 
 		spring.putConstraint(SpringLayout.WEST, labelGDrive, 40+sizeIconWidth, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelGDrive, north, SpringLayout.NORTH, contentPane);
@@ -3796,6 +3886,13 @@ public class PasswordManager extends JFrame
 				{
 					GDriveBackup gbackup = new GDriveBackup();
 					gbackup.doFileBackup(passwordFile);
+
+				/*
+				 *	int action = showQuestionDialog("Warning: This will overwrite the local password file! Do you wish to continue?");
+				 *	if (JOptionPane.CANCEL_OPTION == action)
+				 *		return;
+				 *	gbackup.doDownloadBackup(passwordFile);
+				 */
 				}
 				catch (IOException e1)
 				{
@@ -3821,6 +3918,8 @@ public class PasswordManager extends JFrame
 		setSize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT);
 		setTitle(currentLanguage.get(STRING_APPLICATION_NAME) + " v" + VERSION);
 
+		contentPane.setBackground(colorFrame);
+
 		JPanel panelButtons = new JPanel();
 		JLabel unlockedContainer = new JLabel(iconShield128);
 
@@ -3831,6 +3930,7 @@ public class PasswordManager extends JFrame
 		JButton buttonSet = new JButton(iconCog32);
 		JButton buttonSearch = new JButton(iconSearch32);
 		JButton buttonUpload = new JButton(iconUpload32);
+		JButton buttonDownload = new JButton(iconDownload32);
 
 		buttonAdd.setBackground(colorButton);
 		buttonView.setBackground(colorButton);
@@ -3839,9 +3939,10 @@ public class PasswordManager extends JFrame
 		buttonSet.setBackground(colorButton);
 		buttonSearch.setBackground(colorButton);
 		buttonUpload.setBackground(colorButton);
+		buttonDownload.setBackground(colorButton);
 
-		final int nrButtons = 6;
-		final int buttonsPerRow = 6;
+		final int nrButtons = 8;
+		final int buttonsPerRow = 8;
 
 		//panelButtons.setLayout(new BoxLayout(panelButtons, BoxLayout.X_AXIS));
 		panelButtons.setLayout(new GridLayout(((nrButtons-1)/buttonsPerRow)+1, nrButtons));
@@ -3853,6 +3954,7 @@ public class PasswordManager extends JFrame
 		panelButtons.add(buttonSet);
 		panelButtons.add(buttonSearch);
 		panelButtons.add(buttonUpload);
+		panelButtons.add(buttonDownload);
 
 // global var
 		taAppName = new JTextArea(currentLanguage.get(STRING_APPLICATION_NAME));
@@ -3883,8 +3985,6 @@ public class PasswordManager extends JFrame
 				dateFmt.format(new Date(when)),
 				ageDays
 			});
-
-			System.out.println("Added details for ID \"" + entry.getId() + "\"");
 		}
 
 		JTable table = new JTable(model);
@@ -3901,17 +4001,20 @@ public class PasswordManager extends JFrame
 
 		//table.setPreferredSize(sizeTable);
 		//table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		table.setBackground(colorFrame);
-		table.setFont(new Font("Times New Roman", Font.PLAIN, 18));
-		//table.setForeground(colorTable);
-		//table.setBackground(colorFrame);
+		table.setFont(new Font("Times New Roman", Font.PLAIN, 16));
+		//table.setForeground(new Color(0, 0, 153));
+		table.setBackground(new Color(252, 252, 252));
+
+		table
+			.getTableHeader()
+			.setFont(fontLabel);
 
 		table.setCellSelectionEnabled(true);
 		table.getSelectionModel()
 			.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 
-		scrollPane.getHorizontalScrollBar().setUI(new BasicScrollBarUI());
-		scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI());
+		//scrollPane.getHorizontalScrollBar().setUI(new BasicScrollBarUI());
+		//scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI());
 
 		final int VERTICAL_GAP = 50;
 		final int VERTICAL_GAP_LABEL = 40;
@@ -3921,25 +4024,18 @@ public class PasswordManager extends JFrame
 		int iconHeight = iconUnlocked128.getIconHeight();
 
 		int halfWidth = (MAIN_WINDOW_WIDTH>>1);
-		int north = 40;
 
-		spring.putConstraint(SpringLayout.WEST, unlockedContainer, 70, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, unlockedContainer, north, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.WEST, unlockedContainer, 150, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, unlockedContainer, 40, SpringLayout.NORTH, contentPane);
 
-		north += (iconHeight>>1) - 20;
-
-		spring.putConstraint(SpringLayout.WEST, taAppName, 60 + iconWidth + HORIZONTAL_GAP, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, taAppName, north, SpringLayout.NORTH, contentPane);
-
-		north += (iconHeight>>1) + VERTICAL_GAP + 20;
+		spring.putConstraint(SpringLayout.WEST, taAppName, 20, SpringLayout.EAST, unlockedContainer);
+		spring.putConstraint(SpringLayout.NORTH, taAppName, (iconHeight>>1)-20, SpringLayout.NORTH, unlockedContainer);
 
 		spring.putConstraint(SpringLayout.WEST, scrollPane, HORIZONTAL_GAP, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, scrollPane, north, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, scrollPane, VERTICAL_GAP+20, SpringLayout.SOUTH, unlockedContainer);
 
-		north += MAIN_WINDOW_SCROLLBAR_HEIGHT+15;
-
-		spring.putConstraint(SpringLayout.WEST, panelButtons, HORIZONTAL_GAP+80, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, panelButtons, north, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.WEST, panelButtons, HORIZONTAL_GAP+60, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, panelButtons, 40, SpringLayout.SOUTH, scrollPane);
 
 		contentPane.setLayout(spring);
 
@@ -4013,6 +4109,14 @@ public class PasswordManager extends JFrame
 			}
 		});
 
+		buttonDownload.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				showDownloadBackupWindow();
+			}
+		});
+
 		table
 			.getSelectionModel()
 			.addListSelectionListener(new ListSelectionListener() {
@@ -4028,13 +4132,6 @@ public class PasswordManager extends JFrame
 				{
 					currentlySelectedRow = selectedRows[0];
 					setSelectedEntry((String)table.getValueAt(selectedRows[0], 0));
-
-					System.out.println(
-						"Selected entry: " +
-						currentlySelectedEntry.getId() +
-						" (row " + currentlySelectedRow +
-						")"
-					);
 				}
 			}
 		});
@@ -4315,9 +4412,8 @@ public class PasswordManager extends JFrame
 
 	public static void main(final String argv[])
 	{
-		UIManager.put("Scrollbar.thumb", new ColorUIResource(Color.BLACK));
-		UIManager.put("Scrollbar.thumbHighlight", new ColorUIResource(Color.BLACK));
-
+		//UIManager.put("Scrollbar.thumb", new ColorUIResource(Color.BLACK));
+		//UIManager.put("Scrollbar.thumbHighlight", new ColorUIResource(Color.BLACK));
 		SwingUtilities.invokeLater(new Runnable()
 		{
 			@Override

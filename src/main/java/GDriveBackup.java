@@ -11,21 +11,53 @@ import com.google.api.client.http.FileContent;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
+
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.io.IOException;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import java.security.GeneralSecurityException;
 
 import java.util.Collections;
 import java.util.List;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+class BackedFile
+{
+	@JsonProperty
+	private String name;
+	@JsonProperty
+	private String id;
+	@JsonProperty
+	private long when;
+
+	public void setName(String n) { this.name = n; }
+	public void setId(String i) { this.id = i; }
+	public void setWhen(long w) { this.when = w; }
+
+	public String getName() { return this.name; }
+	public String getId() { return this.id; }
+	public long getWhen() { return this.when; }
+}
 
 public class GDriveBackup
 {
@@ -36,6 +68,7 @@ public class GDriveBackup
 	// "View and manage Google Drive files and folders that you have opened or created with this app"
 	private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE_FILE);
 	private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
+	private static final String BACKEDUP_FILE_PATH = "src/main/resources/backup.json";
 
     /**
      * Creates an authorized Credential object.
@@ -92,6 +125,7 @@ public class GDriveBackup
 		throws IOException, GeneralSecurityException
 	{
 		final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+
 		Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
 			.setApplicationName(APPLICATION_NAME)
 			.build();
@@ -100,11 +134,27 @@ public class GDriveBackup
 		java.io.File fObj = new java.io.File(path);
 		FileContent content = new FileContent("application/octet-stream", fObj);
 		String name = null;
+		final ObjectMapper mapper = new ObjectMapper();
+		java.io.File fileBackup = new java.io.File(BACKEDUP_FILE_PATH);
+		BackedFile bFile = null;
+		String gFileId = null;
+
+		if (fileBackup.exists())
+		{
+			byte[] data = Files.readAllBytes(Paths.get(BACKEDUP_FILE_PATH));
+			bFile = mapper.readValue(data, BackedFile.class);
+
+			gFileId = bFile.getId();
+		}
+		else
+		{
+			bFile = new BackedFile();
+		}
 
 		try
 		{
 			name = removePathPart(path);
-			name += "_passwordfile_backup";
+			name += "_passwordfile_backup_" + System.currentTimeMillis();
 		}
 		catch (UnsupportedEncodingException e)
 		{
@@ -115,11 +165,66 @@ public class GDriveBackup
 		fMeta.setName(name);
 		//fMeta.setOwnedByMe(true); // << This was causing a 403 Forbidden error (field not writeable)
 
-		com.google.api.services.drive.model.File gFile = service.files().create(fMeta, content)
-			.execute();
+		/*
+		 * If we already have a backup, use the files.update method.
+		 */
+		if (null != gFileId)
+		{
+			service
+				.files()
+				.update(gFileId, fMeta, content)
+				.execute();
 
-		System.out.println("Created file on GDrive: " + gFile.getId());
+			System.out.println("Updated backup file on GDrive with ID " + gFileId);
+
+			bFile.setWhen(System.currentTimeMillis());
+		}
+		else
+		{
+			com.google.api.services.drive.model.File gFile = service
+				.files()
+				.create(fMeta, content)
+				.execute();
+
+			System.out.println(
+				"Created new file on GDrive with ID " + gFile.getId());
+
+			bFile.setName(name);
+			bFile.setId(gFile.getId());
+			bFile.setWhen(System.currentTimeMillis());
+		}
+
+		mapper.writeValue(new java.io.File(BACKEDUP_FILE_PATH), bFile);
 
 		return;	
+	}
+
+	public int doDownloadBackup(String path)
+		throws IOException, GeneralSecurityException
+	{
+		final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+		Drive service = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
+			.setApplicationName(APPLICATION_NAME)
+			.build();
+
+		ObjectMapper mapper = new ObjectMapper();
+		java.io.File fileBackup = new java.io.File(BACKEDUP_FILE_PATH);
+		BackedFile bFile = null;
+		OutputStream out = new ByteArrayOutputStream();
+
+		if (!fileBackup.exists())
+			return -1;
+
+		byte[] data = Files.readAllBytes(Paths.get(BACKEDUP_FILE_PATH));
+		bFile = mapper.readValue(data, BackedFile.class);
+
+		service
+			.files()
+			.get(bFile.getId())
+			.executeMediaAndDownloadTo(out);
+
+		((ByteArrayOutputStream)out).writeTo(new FileOutputStream(new java.io.File(path)));
+
+		return 0;
 	}
 }
