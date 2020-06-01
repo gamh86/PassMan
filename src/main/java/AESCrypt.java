@@ -114,8 +114,6 @@ public class AESCrypt
 
 			char[] rawKey = key.toCharArray();
 
-			Base64.Encoder base = Base64.getEncoder();
-
 			PBEKeySpec pbe = new PBEKeySpec(rawKey, salt, PBKDF2_ITERATIONS, AES_KEY_BITS);
 			SecretKeyFactory kFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
 			byte[] rawDerivedKey = kFactory.generateSecret(pbe).getEncoded();
