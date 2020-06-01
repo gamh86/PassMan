@@ -14,5 +14,6 @@ dependencies {
 	compile 'com.google.apis:google-api-services-drive:v3-rev110-1.23.0'
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.0'
 	implementation 'com.fasterxml.jackson.core:jackson-annotations:2.11.0'
+	compile group: 'commons-codec', name: 'commons-codec', version: '1.14'
 }
 
