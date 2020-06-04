@@ -1,5 +1,6 @@
 import aescrypt.*;
 import backup.*; // for our GDriveBackup class
+import renderer.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -38,6 +39,7 @@ import java.util.Random;
 import java.util.TimeZone;
 import java.util.Set;
 import java.util.Optional;
+import java.util.StringTokenizer;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -46,6 +48,8 @@ import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection; // for copying text to clipboard
 import java.awt.event.*;
 //import java.awt.event.ActionEvent;
@@ -120,6 +124,53 @@ class Backup
 	long timestamp;
 }
 
+class ExcelAdapter implements ActionListener
+{
+	private String rowString;
+	private String value;
+	private Clipboard clipboard;
+	private StringSelection selected;
+	private JTable table;
+
+	public ExcelAdapter(JTable t)
+	{
+		this.table = t;
+		final KeyStroke copy = KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_MASK, false);
+		table.registerKeyboardAction(this, "Copy", copy, JComponent.WHEN_FOCUSED);
+		clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent event)
+	{
+		final String actionCommand = event.getActionCommand();
+
+		if (actionCommand.equals("Copy"))
+		{
+			final int rowCount = table.getSelectedRowCount();
+			final int colCount = table.getSelectedColumnCount();
+			final int[] rows = table.getSelectedRows();
+			final int[] cols = table.getSelectedColumns();
+
+			if (rowCount > 1 || colCount > 1)
+			{
+				JOptionPane.showMessageDialog(
+					null,
+					null,
+					"Only one cell can be copied at a time",
+					JOptionPane.ERROR_MESSAGE
+				);
+
+				return;
+			}
+
+			selected = new StringSelection((String)table.getValueAt(rows[0], cols[0]));
+			clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+			clipboard.setContents(selected, null);
+		}
+	}
+}
+
 public class PasswordManager extends JFrame
 {
 	private static final String VERSION = "1.0.1";
@@ -145,7 +196,7 @@ public class PasswordManager extends JFrame
 
 	private static final String JSON_BACKUP_FILE = "src/main/resources/backup.json";
 
-	private static final int MAIN_WINDOW_WIDTH = 750;
+	private static final int MAIN_WINDOW_WIDTH = 1000;
 	private static final int MAIN_WINDOW_HEIGHT = 560;
 	private static final int MAIN_WINDOW_SCROLLBAR_WIDTH = (MAIN_WINDOW_WIDTH - 120);
 	private static final int MAIN_WINDOW_SCROLLBAR_HEIGHT = (MAIN_WINDOW_HEIGHT - 400);
@@ -1079,28 +1130,9 @@ public class PasswordManager extends JFrame
 			com.fasterxml.jackson.core.type.TypeReference typeRef = new
 				com.fasterxml.jackson.core.type.TypeReference<HashMap<String,ArrayList<PasswordEntry>>>() {};
 
-			System.out.println(fContents);
+			//System.out.println(fContents);
 			byte[] data = fContents.getBytes("UTF-8");
 			passwordEntries = (HashMap<String,ArrayList<PasswordEntry>>)mapper.readValue(data, typeRef);
-/*
-			Set<HashMap.Entry<String,ArrayList<PasswordEntry>>> set = passwordEntries.entrySet();
-			Iterator<HashMap.Entry<String,ArrayList<PasswordEntry>>> iter = set.iterator();
-			Iterator<PasswordEntry> entIter = null;
-
-			while (iter.hasNext()) // XXX
-			{
-				HashMap.Entry<String,ArrayList<PasswordEntry>> entry = iter.next();
-
-				entIter = entry.getValue().iterator();
-
-				while (entIter.hasNext())
-				{
-					PasswordEntry ent = entIter.next();
-					ent.setHash(getMD5(ent.getUsername() + ent.getTimestamp()));
-					System.out.println("MD5: " + ent.getHash());
-				}
-			}
-*/
 		}
 		catch (Exception e)
 		{
@@ -1465,6 +1497,11 @@ public class PasswordManager extends JFrame
 		}
 
 		return hash;
+	}
+
+	private String getUniqueId(PasswordEntry entry)
+	{
+		return getMD5(entry.getEmail() + entry.getUsername() + entry.getTimestamp());
 	}
 
 	/**
@@ -2849,11 +2886,7 @@ public class PasswordManager extends JFrame
 				if (false == fileContentsCached)
 					getFileContents(passwordFile);
 
-				newEntry.setHash(getMD5(
-					newEntry.getUsername() +
-					newEntry.getTimestamp()
-					)
-				);
+				newEntry.setHash(getUniqueId(newEntry));
 
 				addNewPasswordEntry(tfId.getText(), newEntry);
 				putPasswordEntries();
@@ -3339,12 +3372,7 @@ public class PasswordManager extends JFrame
 				{
 					entry.setPassword(newPassword);
 					entry.setTimestamp(System.currentTimeMillis());
-					entry
-						.setHash(getMD5(
-							entry.getUsername() +
-							entry.getTimestamp()
-							)
-						);
+					entry.setHash(getUniqueId(entry));
 				}
 
 				putPasswordEntry(oldHash, entry); // replace old entry in HashMap
@@ -3837,21 +3865,43 @@ public class PasswordManager extends JFrame
 
 		table = new JTable(model);
 
+		for (int i = 0; i <= IDX_UNIQUE_ID; ++i)
+			table.getColumnModel().getColumn(i).setMinWidth(150);
+		//table.getColumnModel().getColumn(IDX_PASSWORD_ID).setMinWidth(100);
+		//table.getColumnModel().getColumn(IDX_EMAIL).setMinWidth(200);
+		//table.getColumnModel().getColumn(IDX_USERNAME).setMinWidth(100);
+		//table.getColumnModel().getColumn(IDX_PASSWORD).setMinWidth(300);
+		//table.getColumnModel().getColumn(IDX_PASSWORD_LENGTH).setMinWidth(150);
+		//table.getColumnModel().getColumn(IDX_AGE).setMinWidth(150);
+		//table.getColumnModel().getColumn(IDX_UNIQUE_ID).setMinWidth(200);
+
 		JScrollPane scrollPane = new JScrollPane(table,
 			JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 			JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 
+		//final int scrollPaneWidth = MAIN_WINDOW_WIDTH - 100;
+		//final int scrollPaneHeight = 175;
+
 		final int tableWidth = MAIN_WINDOW_WIDTH - 100;
 		final int tableHeight = 175;
-		Dimension sizeTable = new Dimension(tableWidth, tableHeight);
+		final int scrollWest = ((MAIN_WINDOW_WIDTH - tableWidth)>>1);
 
+		Dimension sizeTable = new Dimension(tableWidth, tableHeight);
+		Dimension size = new Dimension(800, 200);
+
+		table.setPreferredScrollableViewportSize(sizeTable);
+		//table.setFillsViewportHeight(true);
 		scrollPane.setPreferredSize(sizeTable);
 
-		//table.setPreferredSize(sizeTable);
+		new ExcelAdapter(table); // so we can use CTRL+C in cells
+
+		//table.setPreferredSize(size);
 		//table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		table.setFont(new Font("Times New Roman", Font.PLAIN, 16));
+		table.setFont(new Font("Courier New", Font.PLAIN, 18));
 		//table.setForeground(new Color(0, 0, 153));
 		table.setBackground(new Color(252, 252, 252));
+		TableCellRenderer renderer = new PTableCellRenderer();
+		table.setDefaultRenderer(Object.class, renderer);
 
 		table
 			.getTableHeader()
@@ -3859,7 +3909,9 @@ public class PasswordManager extends JFrame
 
 		table.setCellSelectionEnabled(true);
 		table.getSelectionModel()
-			.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+			.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+		table.getSelectionModel().addSelectionInterval(0,2);
 
 		//scrollPane.getHorizontalScrollBar().setUI(new BasicScrollBarUI());
 		//scrollPane.getVerticalScrollBar().setUI(new BasicScrollBarUI());
@@ -3879,7 +3931,7 @@ public class PasswordManager extends JFrame
 		spring.putConstraint(SpringLayout.WEST, taAppName, 20, SpringLayout.EAST, unlockedContainer);
 		spring.putConstraint(SpringLayout.NORTH, taAppName, (iconHeight>>1)-20, SpringLayout.NORTH, unlockedContainer);
 
-		spring.putConstraint(SpringLayout.WEST, scrollPane, HORIZONTAL_GAP, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, scrollPane, scrollWest, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, scrollPane, VERTICAL_GAP+20, SpringLayout.SOUTH, unlockedContainer);
 
 		spring.putConstraint(SpringLayout.WEST, panelButtons, HORIZONTAL_GAP+60, SpringLayout.WEST, contentPane);
@@ -3962,10 +4014,36 @@ public class PasswordManager extends JFrame
 
 				if (selectedRows.length > 0)
 				{
+					//showInfoDialog((String)table.getValueAt(selectedRows[0], IDX_PASSWORD));
 					currentlySelectedRow = selectedRows[0];
 				}
 			}
 		});
+
+/*
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e)
+			{
+				int row = table.rowAtPoint(e.getPoint());
+				if (row >= 0 && row < table.getRowCount())
+					table.setRowSelectionInterval(row, row);
+				else
+					table.clearSelection();
+
+				int idx = table.getSelectedRow();
+
+				if (idx < 0)
+					return;
+
+				if (e.getComponent() instanceof JTable)
+				{
+					JPopupMenu pop = new RightClickPopup().getMenu();
+					pop.show(e.getComponent(), e.getX(), e.getY());
+				}
+			}
+		});
+*/
 	}
 
 	private void doLanguageConfiguration()
