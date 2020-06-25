@@ -1,5 +1,6 @@
 import aescrypt.*;
 import backup.*; // for our GDriveBackup class
+import custom.*;
 import renderer.*;
 import model.*;
 import passworddata.*;
@@ -4101,7 +4102,7 @@ public class PasswordManager extends JFrame
 					return;
 
 				tfSelectedPasswordLen.setText("" + entry.getPassword().length());
-				//tfSelectedPassword.setText(entry.getPassword());
+				tfSelectedPassword.setText(entry.getPassword());
 				tfSelectedEmail.setText(entry.getEmail());
 				tfSelectedUsername.setText(entry.getUsername());;
 				tfSelectedPasswordAgeInDays.setText("" + getAgeInDaysFromTimestamp(entry.getTimestamp()));
@@ -4115,22 +4116,42 @@ public class PasswordManager extends JFrame
 
 	public void setupGUI()
 	{
-		SpringLayout spring = new SpringLayout();
+/*
+ * Define the sizes of the components within the frame and calculate
+ * the frame width and height based on these sizes.
+ */
+		final int ICON_WIDTH = iconUnlocked128.getIconWidth();
+		final int ICON_HEIGHT = iconUnlocked128.getIconHeight();
 
+		final int VERTICAL_GAP = 40;
+
+		final int PANEL_SCROLLBAR_GAP = 40;
+		final int FRAME_MARGIN = 50;
+		final int TREE_SCROLLBAR_WIDTH = 400;
+		final int TREE_SCROLLBAR_HEIGHT = 500;
+		//final int TOOLBAR_WIDTH = 350;
+		final int PANEL_BUTTONS_HEIGHT = 50;
+		final int PANEL_DETAILS_WIDTH = 450;
+		final int PANEL_DETAILS_HEIGHT = TREE_SCROLLBAR_HEIGHT - PANEL_BUTTONS_HEIGHT;
+		final int FRAME_WIDTH = (FRAME_MARGIN<<1) + TREE_SCROLLBAR_WIDTH + PANEL_SCROLLBAR_GAP + PANEL_DETAILS_WIDTH;
+		final int FRAME_HEIGHT = ICON_HEIGHT + VERTICAL_GAP + FRAME_MARGIN + (FRAME_MARGIN<<1) + TREE_SCROLLBAR_HEIGHT;
+
+		final int TF_DETAILS_WIDTH = 400;
+		final int TF_DETAILS_HEIGHT = 27;
+
+		final int HALF_FRAME_WIDTH = (FRAME_WIDTH>>1);
+
+		SpringLayout spring = new SpringLayout();
 		Container contentPane = getContentPane();
 
-		final int FRAME_WIDTH = SCREEN_WIDTH-100;
-		final int FRAME_HEIGHT = SCREEN_HEIGHT-100;
-
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(FRAME_WIDTH, FRAME_HEIGHT);
 		setTitle(currentLanguage.get(STRING_APPLICATION_NAME) + " v" + VERSION);
+		setSize(FRAME_WIDTH, FRAME_HEIGHT);
 
 		contentPane.setBackground(colorFrame);
 
 		JPanel panelButtons = new JPanel();
 		JLabel unlockedContainer = new JLabel(iconShield128);
-		JToolBar tb = new JToolBar();
 
 		JButton buttonAdd = new JButton(iconAdd32);
 		JButton buttonView = new JButton(iconView32);
@@ -4151,18 +4172,12 @@ public class PasswordManager extends JFrame
 		final int nrButtons = 8;
 		final int buttonsPerRow = 8;
 
-		tb.setFloatable(false);
-		tb.add(buttonAdd);
-		tb.add(buttonView);
-		tb.add(buttonChange);
-		tb.add(buttonUpload);
-		tb.add(buttonDownload);
-		tb.add(buttonRemove);
-
-		final int tbWidth = 500;
-		final int tbHeight = 50;
-
-		tb.setPreferredSize(new Dimension(tbWidth, tbHeight));
+		panelButtons.add(buttonAdd);
+		panelButtons.add(buttonView);
+		panelButtons.add(buttonChange);
+		panelButtons.add(buttonUpload);
+		panelButtons.add(buttonDownload);
+		panelButtons.add(buttonRemove);
 
 // global var
 		taAppName = new JTextArea(currentLanguage.get(STRING_APPLICATION_NAME));
@@ -4172,9 +4187,6 @@ public class PasswordManager extends JFrame
 		taAppName.setBackground(contentPane.getBackground());
 		taAppName.setBorder(null);
 		taAppName.setEditable(false);
-
-		JPanel panelIds = new JPanel();
-		panelIds.setLayout(new GridLayout(0, 1));
 
 /*
 		final String[] columnNames = {
@@ -4243,73 +4255,108 @@ public class PasswordManager extends JFrame
 			JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
 		);
 
-		final int spWidth = (FRAME_WIDTH>>3) + 200;
-		final int spHeight = (FRAME_HEIGHT>>1);
+
 
 		//final int tableWidth = FRAME_WIDTH-spWidth-80;
 		//final int tableHeight = spHeight;
 
 		//scrollPane.setPreferredSize(new Dimension(tableWidth, tableHeight));
-		sp.setPreferredSize(new Dimension(spWidth, spHeight));
+		sp.setPreferredSize(new Dimension(TREE_SCROLLBAR_WIDTH, TREE_SCROLLBAR_HEIGHT));
 
 		//table
 		//	.getTableHeader()
 		//	.setFont(fontLabel);
 
-		JPanel panelSelected = new JPanel(new FlowLayout());
-		panelSelected.setPreferredSize(new Dimension(spWidth*3, spHeight));
+		JPanel panelSelected = new JPanel();
+		panelSelected.setPreferredSize(new Dimension(PANEL_DETAILS_WIDTH, PANEL_DETAILS_HEIGHT));
+		SpringLayout spring2 = new SpringLayout();
 
-		Dimension tfsSize = new Dimension(350, 25);
+		panelSelected.setLayout(spring2);
 
-		tfSelectedEmail = new JTextField("");
-		tfSelectedUsername = new JTextField("");
-		tfSelectedPasswordLen = new JTextField("");
-		tfSelectedPasswordAgeInDays = new JTextField("");
+		Dimension tfsSize = new Dimension(TF_DETAILS_WIDTH, TF_DETAILS_HEIGHT);
 
-		tfSelectedEmail.setPreferredSize(tfsSize);
-		tfSelectedUsername.setPreferredSize(tfsSize);
-		tfSelectedPasswordLen.setPreferredSize(tfsSize);
-		tfSelectedPasswordAgeInDays.setPreferredSize(tfsSize);
+		tfSelectedEmail = new SelectedDetailsTextField("");
+		tfSelectedUsername = new SelectedDetailsTextField("");
+		tfSelectedPasswordLen = new SelectedDetailsTextField("");
+		tfSelectedPasswordAgeInDays = new SelectedDetailsTextField("");
+		tfSelectedPassword = new SelectedDetailsTextField("");
 
-		tfSelectedEmail.setComponentPopupMenu(new RightClickPopup().getMenu());
-		tfSelectedUsername.setComponentPopupMenu(new RightClickPopup().getMenu());
-		tfSelectedPasswordLen.setComponentPopupMenu(new RightClickPopup().getMenu());
-		tfSelectedPasswordAgeInDays.setComponentPopupMenu(new RightClickPopup().getMenu());
+		JLabel labelSelectedEmail = new SelectedDetailsLabel("Email");
+		JLabel labelSelectedUsername = new SelectedDetailsLabel("Username");
+		JLabel labelSelectedPasswordLen = new SelectedDetailsLabel("Password Length");
+		JLabel labelSelectedPasswordAgeInDays = new SelectedDetailsLabel("Age (days)");
+		JLabel labelSelectedPassword = new SelectedDetailsLabel("Password");
 
+	/*
+	 * The layout of the labels and textfields within the panel which will
+	 * display the details of the selected leaf node in the JTree.
+	 */
+		final int LABEL_FIELD_GAP = 10;
+		final int FIELD_NEXT_LABEL_GAP = 20;
+		final int WEST_GAP = 20;
+		final int LABEL_LEFT = 10;
+
+		spring2.putConstraint(SpringLayout.NORTH, labelSelectedEmail, 20, SpringLayout.NORTH, panelSelected);
+		spring2.putConstraint(SpringLayout.WEST, labelSelectedEmail, LABEL_LEFT, SpringLayout.WEST, tfSelectedEmail);
+
+		spring2.putConstraint(SpringLayout.NORTH, tfSelectedEmail, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedEmail);
+		spring2.putConstraint(SpringLayout.WEST, tfSelectedEmail, WEST_GAP, SpringLayout.WEST, panelSelected);
+
+		spring2.putConstraint(SpringLayout.NORTH, labelSelectedUsername, FIELD_NEXT_LABEL_GAP, SpringLayout.SOUTH, tfSelectedEmail);
+		spring2.putConstraint(SpringLayout.WEST, labelSelectedUsername, LABEL_LEFT, SpringLayout.WEST, tfSelectedUsername);
+
+		spring2.putConstraint(SpringLayout.NORTH, tfSelectedUsername, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedUsername);
+		spring2.putConstraint(SpringLayout.WEST, tfSelectedUsername, WEST_GAP, SpringLayout.WEST, panelSelected);
+
+		spring2.putConstraint(SpringLayout.NORTH, labelSelectedPasswordLen, FIELD_NEXT_LABEL_GAP, SpringLayout.SOUTH, tfSelectedUsername);
+		spring2.putConstraint(SpringLayout.WEST, labelSelectedPasswordLen, LABEL_LEFT, SpringLayout.WEST, tfSelectedPasswordLen);
+
+		spring2.putConstraint(SpringLayout.NORTH, tfSelectedPasswordLen, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedPasswordLen);
+		spring2.putConstraint(SpringLayout.WEST, tfSelectedPasswordLen, WEST_GAP, SpringLayout.WEST, panelSelected);
+
+		spring2.putConstraint(SpringLayout.NORTH, labelSelectedPasswordAgeInDays, FIELD_NEXT_LABEL_GAP, SpringLayout.SOUTH, tfSelectedPasswordLen);
+		spring2.putConstraint(SpringLayout.WEST, labelSelectedPasswordAgeInDays, LABEL_LEFT, SpringLayout.WEST, tfSelectedPasswordAgeInDays);
+
+		spring2.putConstraint(SpringLayout.NORTH, tfSelectedPasswordAgeInDays, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedPasswordAgeInDays);
+		spring2.putConstraint(SpringLayout.WEST, tfSelectedPasswordAgeInDays, WEST_GAP, SpringLayout.WEST, panelSelected);
+
+		spring2.putConstraint(SpringLayout.NORTH, labelSelectedPassword, FIELD_NEXT_LABEL_GAP, SpringLayout.SOUTH, tfSelectedPasswordAgeInDays);
+		spring2.putConstraint(SpringLayout.WEST, labelSelectedPassword, LABEL_LEFT, SpringLayout.WEST, tfSelectedPassword);
+
+		spring2.putConstraint(SpringLayout.NORTH, tfSelectedPassword, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedPassword);
+		spring2.putConstraint(SpringLayout.WEST, tfSelectedPassword, WEST_GAP, SpringLayout.WEST, panelSelected);
+
+		panelSelected.add(labelSelectedEmail);
 		panelSelected.add(tfSelectedEmail);
+		panelSelected.add(labelSelectedUsername);
 		panelSelected.add(tfSelectedUsername);
+		panelSelected.add(labelSelectedPasswordLen);
 		panelSelected.add(tfSelectedPasswordLen);
+		panelSelected.add(labelSelectedPasswordAgeInDays);
 		panelSelected.add(tfSelectedPasswordAgeInDays);
+		panelSelected.add(labelSelectedPassword);
+		panelSelected.add(tfSelectedPassword);
 
 		//scrollPane.getHorizontalScrollBar().setUI(new javax.swing.plaf.synth.SynthScrollBarUI());
 		//scrollPane.getVerticalScrollBar().setUI(new javax.swing.plaf.synth.SynthScrollBarUI());
 
-		final int VERTICAL_GAP = 50;
-		final int VERTICAL_GAP_LABEL = 40;
-		final int HORIZONTAL_GAP = 50;
-
-		int iconWidth = iconUnlocked128.getIconWidth();
-		int iconHeight = iconUnlocked128.getIconHeight();
-
-		int halfWidth = (MAIN_WINDOW_WIDTH>>1);
-
-		spring.putConstraint(SpringLayout.WEST, unlockedContainer, 150, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, unlockedContainer, HALF_FRAME_WIDTH-(ICON_WIDTH+80), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, unlockedContainer, 40, SpringLayout.NORTH, contentPane);
 
 		spring.putConstraint(SpringLayout.WEST, taAppName, 20, SpringLayout.EAST, unlockedContainer);
-		spring.putConstraint(SpringLayout.NORTH, taAppName, (iconHeight>>1)-20, SpringLayout.NORTH, unlockedContainer);
+		spring.putConstraint(SpringLayout.NORTH, taAppName, (ICON_HEIGHT>>1)-20, SpringLayout.NORTH, unlockedContainer);
 
-		spring.putConstraint(SpringLayout.WEST, sp, 40, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, sp, 80, SpringLayout.SOUTH, unlockedContainer);
+		spring.putConstraint(SpringLayout.WEST, sp, FRAME_MARGIN, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, sp, VERTICAL_GAP, SpringLayout.SOUTH, unlockedContainer);
 
-		spring.putConstraint(SpringLayout.WEST, panelSelected, 20, SpringLayout.EAST, sp);
+		spring.putConstraint(SpringLayout.WEST, panelSelected, PANEL_SCROLLBAR_GAP, SpringLayout.EAST, sp);
 		spring.putConstraint(SpringLayout.NORTH, panelSelected, 0, SpringLayout.NORTH, sp);
 
 		//spring.putConstraint(SpringLayout.WEST, scrollPane, 0, SpringLayout.EAST, sp);
 		//spring.putConstraint(SpringLayout.NORTH, scrollPane, 0, SpringLayout.NORTH, sp);
 
-		spring.putConstraint(SpringLayout.WEST, tb, 200, SpringLayout.WEST, panelSelected);
-		spring.putConstraint(SpringLayout.NORTH, tb, 0, SpringLayout.SOUTH, panelSelected);
+		spring.putConstraint(SpringLayout.WEST, panelButtons, PANEL_SCROLLBAR_GAP, SpringLayout.EAST, sp);
+		spring.putConstraint(SpringLayout.SOUTH, panelButtons, 0, SpringLayout.SOUTH, sp);
 
 		contentPane.setLayout(spring);
 
@@ -4319,7 +4366,7 @@ public class PasswordManager extends JFrame
 		contentPane.add(sp);
 		contentPane.add(panelSelected);
 		//contentPane.add(panelButtons);
-		contentPane.add(tb);
+		contentPane.add(panelButtons);
 
 		setLocationRelativeTo(null);
 		setVisible(true);
@@ -4641,43 +4688,6 @@ public class PasswordManager extends JFrame
 
 			//setupGUI();
 			unlockPasswordFile();
-		}
-	}
-/*
- * Private classes
- */
-
-	private class RightClickPopup extends JPanel
-	{
-		private JPopupMenu menu = null;
-
-		public RightClickPopup()
-		{
-			menu = new JPopupMenu();
-			Action copy = new DefaultEditorKit.CopyAction();
-			Action paste = new DefaultEditorKit.PasteAction();
-
-			if (null == currentLanguage) // default to English
-			{
-				copy.putValue(Action.NAME, "Copy");
-				paste.putValue(Action.NAME, "Paste");
-			}
-			else
-			{
-				copy.putValue(Action.NAME, currentLanguage.get(STRING_COPY));
-				paste.putValue(Action.NAME, currentLanguage.get(STRING_PASTE));
-			}
-
-			copy.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
-			paste.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
-
-			menu.add(copy);
-			menu.add(paste);
-		}
-
-		public JPopupMenu getMenu()
-		{
-			return menu;
 		}
 	}
 
