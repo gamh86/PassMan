@@ -192,7 +192,7 @@ public class Languages
 		map.put(STRING_PROMPT_EMAIL_COPIED, "클립보드에게 이메일이 복사하되었습니다");
 		map.put(STRING_PROMPT_USERNAME_COPIED, "클립보드에게 사용자 이름이 복사하되었습니다");
 
-		map.put(STRING_ERROR_PASSWORD_ID, "이 아이디의 비밀번호를 변경하될 수 없었습니다");
+		map.put(STRING_ERROR_PASSWORD_ID, "해당 비밀번호 아이디가 없습니다");
 		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "비밀번호가 이미 존재합니다");
 		map.put(STRING_ERROR_INVALID_PASSWORD_LENGTH, "비밀번호 길이가 유효하지 않습니다");
 		map.put(STRING_ERROR_INCORRECT_PASSWORD, "잘못뒨 비밀번호");
@@ -286,7 +286,7 @@ public class Languages
 		map.put(STRING_PROMPT_EMAIL_COPIED, "Émail copié");
 		map.put(STRING_PROMPT_USERNAME_COPIED, "Pseudo copié");
 
-		map.put(STRING_ERROR_PASSWORD_ID, "Le mot de passe pour cet ID n'a pas pu être mis à jour");
+		map.put(STRING_ERROR_PASSWORD_ID, "Aucun ID trouvé pour cela");
 		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "Il y a déjà un mot de passe avec cet ID");
 		map.put(STRING_ERROR_PASSWORDS_DO_NOT_MATCH, "Les mots de passes ne correspondent pas");
 		map.put(STRING_ERROR_INVALID_PASSWORD_LENGTH, "Longueur du mot de passe invalide");
@@ -384,7 +384,7 @@ public class Languages
 		map.put(STRING_PROMPT_EMAIL_COPIED, "Email copied");
 		map.put(STRING_PROMPT_USERNAME_COPIED, "Username copied");
 
-		map.put(STRING_ERROR_PASSWORD_ID, "Could not change password for this ID");
+		map.put(STRING_ERROR_PASSWORD_ID, "No such password ID");
 		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "");
 		map.put(STRING_ERROR_INCORRECT_PASSWORD, "Incorrect password");
 		map.put(STRING_ERROR_PASSWORDS_DO_NOT_MATCH, "Passwords do not match");
@@ -479,8 +479,8 @@ public class Languages
 		map.put(STRING_PROMPT_EMAIL_COPIED, "Email telah disalin");
 		map.put(STRING_PROMPT_USERNAME_COPIED, "Nama lengguna telah disalin");
 
-		map.put(STRING_ERROR_PASSWORD_ID, "Kata laluan tidak boleh diubah untuk ID ini. ");
-		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "Kata laluan untuk ID ini sudah wujud.");
+		map.put(STRING_ERROR_PASSWORD_ID, "Tiada ID kata laluan untuk itu");
+		//map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "Kata laluan untuk ID ini sudah wujud");
 		map.put(STRING_ERROR_PASSWORDS_DO_NOT_MATCH, "Kata laluan tidak sepadan");
 		map.put(STRING_ERROR_INVALID_PASSWORD_LENGTH, "Panjang kata laluan tidak sah");
 		map.put(STRING_ERROR_INCORRECT_PASSWORD, "Kata laluan salah");
@@ -566,6 +566,7 @@ public class Languages
 		map.put(STRING_PROMPT_EMAIL_COPIED, "Эл. адрес скопировано");
 		map.put(STRING_PROMPT_USERNAME_COPIED, "Имя пользователя скопировано");
 
+		map.put(STRING_ERROR_PASSWORD_ID, "Нет такого идентификатора пароля");
 		map.put(STRING_ERROR_INCORRECT_PASSWORD, "Неверный пароль");
 		map.put(STRING_ERROR_PASSWORDS_DO_NOT_MATCH, "Пароли не соответствуют");
 		map.put(STRING_ERROR_INVALID_PASSWORD_LENGTH, "Неверная длина пароля");
@@ -602,5 +603,10 @@ public class Languages
 	public Map<Integer,String> getLanguageFromName(String name)
 	{
 		return getLanguage(languageNames.indexOf(name));
+	}
+
+	public ArrayList<String> getLanguageNames()
+	{
+		return languageNames;
 	}
 }
