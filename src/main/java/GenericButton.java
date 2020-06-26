@@ -4,11 +4,11 @@ import javax.swing.JButton;
 import javax.swing.ImageIcon;
 import java.awt.Color;
 
-public class PButton extends JButton
+public class GenericButton extends JButton
 {
 	private Color color = Color.WHITE;
 
-	public PButton(ImageIcon icon)
+	public GenericButton(ImageIcon icon)
 	{
 		super(icon);
 
