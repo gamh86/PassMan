@@ -91,11 +91,13 @@ public class Languages
 	private static final Map<Integer,String> languageEnglish = getLanguageStringsEnglish();
 	private static final Map<Integer,String> languageMalaysian = getLanguageStringsMalaysian();
 	private static final Map<Integer,String> languageFrench = getLanguageStringsFrench();
+	private static final Map<Integer,String> languageRussian = getLanguageStringsRussian();
 
 	public static final int KOREAN = 0;
 	public static final int ENGLISH = 1;
 	public static final int MALAYSIAN = 2;
 	public static final int FRENCH = 3;
+	public static final int RUSSIAN = 4;
 
 	private ArrayList<String> languageValues = null;
 	private ArrayList<Map<Integer,String> > _languages_;
@@ -108,6 +110,7 @@ public class Languages
 		_languages_.add(languageEnglish);
 		_languages_.add(languageMalaysian);
 		_languages_.add(languageFrench);
+		_languages_.add(languageRussian);
 
 		languageValues = new ArrayList<>();
 	/*
@@ -117,6 +120,7 @@ public class Languages
 		languageValues.add("English");
 		languageValues.add("Bahasa Melayu");
 		languageValues.add("Français");
+		languageValues.add("Русский");
 	}
 
 	private static Map<Integer,String> getLanguageStringsKorean()
@@ -524,14 +528,7 @@ public class Languages
 		map.put(STRING_CONFIRM_PASSWORD, "Подтвердите Пароль");
 		map.put(STRING_CHANGE_MASTER_PASSWORD, "Сменить мастер-пароль");
 		map.put(STRING_LANGUAGE, "Язык");
-		//map.put(STRING_PASSWORD_ID_LIST, "Password ID List");
-		//map.put(STRING_POSSIBLE_PERMUTATIONS, "");
-		//map.put(STRING_PASSWORD_LENGTH2, "");
 		map.put(STRING_COPY, "Скопировать");
-		//map.put(STRING_CRACK_TIME, "");
-		//map.put(STRING_SECONDS, "");
-		//map.put(STRING_DAYS, "");
-		//map.put(STRING_YEARS, "");
 		map.put(STRING_CHARACTER_SET, "Набор символов");
 		map.put(STRING_TOGGLE_CHARACTER_SET, "Переключить набор символов");
 		map.put(STRING_GENERATE_RANDOM, "Генерация случайных");
@@ -569,14 +566,9 @@ public class Languages
 		map.put(STRING_PROMPT_EMAIL_COPIED, "Эл. адрес скопировано");
 		map.put(STRING_PROMPT_USERNAME_COPIED, "Имя пользователя скопировано");
 
-		//map.put(STRING_ERROR_PASSWORD_ID, "Could not change password for this ID");
-		//map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "");
 		map.put(STRING_ERROR_INCORRECT_PASSWORD, "Неверный пароль");
 		map.put(STRING_ERROR_PASSWORDS_DO_NOT_MATCH, "Пароли не соответствуют");
 		map.put(STRING_ERROR_INVALID_PASSWORD_LENGTH, "Неверная длина пароля");
-		//map.put(STRING_ERROR_NO_ENTRY, "No entry found for this ID");
-		//map.put(STRING_ERROR_SELECT_PASSWORD_ID, "You must select an ID");
-		//map.put(STRING_ERROR_PASSWORD_NOT_CHANGED, "Password could not be changed for this ID");
 		map.put(STRING_ERROR_SELECT_LANGUAGE, "Вы должны выбрать язык");
 		map.put(STRING_ERROR_TOO_MANY_ATTEMPTS, "Слишком много неверных попыток");
 
@@ -586,14 +578,14 @@ public class Languages
 					+ "обеспечения его безопасности. Убедитесь, что вы не пароля\n"
 					+ "потеряете этот пароль, иначе вы потеряете данные");
 
-		map.put(STRING_PASSWORD_STRENGTH_INFORMATION,
-					"* This is based arbitrarily on a processor\n"
-					+ "  that can perform around 2 trillion\n"
-					+ "  instructions per second.");
-
 		return Collections.unmodifiableMap(map);
 	}
 
+	/**
+	 * Return the language from the array at
+	 * index specified in LANG. If no such
+	 * language exists, default to English.
+	 */
 	public Map<Integer,String> getLanguage(int lang)
 	{
 		Map<Integer,String> l = _languages_.get(lang);
