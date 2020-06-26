@@ -232,6 +232,12 @@ public class PasswordManager extends JFrame
 	private JTextField tfSelectedPasswordAgeInDays = null;
 	private JTextField tfSelectedPasswordUniqueId = null;
 
+	private JLabel labelSelectedEmail = null;
+	private JLabel labelSelectedUsername = null;
+	private JLabel labelSelectedPasswordLen = null;
+	private JLabel labelSelectedPasswordAgeInDays = null;
+	private JLabel labelSelectedPassword = null;
+
 /*
  * Various global fonts/colours
  */
@@ -1830,7 +1836,12 @@ public class PasswordManager extends JFrame
 			// in main JFrame (created in setupGUI)
 			setTitle(currentLanguage.get(languages.STRING_APPLICATION_NAME) + " v" + VERSION);
 			taAppName.setText(currentLanguage.get(languages.STRING_APPLICATION_NAME));
-			//labelPasswordIds.setText(currentLanguage.get(languages.STRING_PASSWORD_ID_LIST));
+
+			labelSelectedEmail.setText(currentLanguage.get(languages.STRING_EMAIL));
+			labelSelectedUsername.setText(currentLanguage.get(languages.STRING_USERNAME));
+			labelSelectedPasswordLen.setText(currentLanguage.get(languages.STRING_PASSWORD_LENGTH));
+			labelSelectedPasswordAgeInDays.setText(currentLanguage.get(languages.STRING_PASSWORD_AGE_DAYS));
+			labelSelectedPassword.setText(currentLanguage.get(languages.STRING_PASSWORD));
 
 			// in JFrame created in showSettings
 			labelMasterPassword.setText(currentLanguage.get(languages.STRING_MASTER_PASSWORD));
@@ -1877,27 +1888,32 @@ public class PasswordManager extends JFrame
 
 		JLabel containerSettingsIcon = new JLabel(iconSettings128);
 
-		final int windowWidth = 650;
-		final int windowHeight = 650;
-		final int scrollPaneWidth = 300;
-		final int scrollPaneHeight = 80;
-		int halfWidth = (windowWidth>>1);
+		final int ICON_WIDTH = iconSettings128.getIconWidth();
+		final int ICON_HEIGHT = iconSettings128.getIconHeight();
+		final int VERTICAL_GAP = 40;
+		final int LEFT_OFFSET = 20;
+		final int SCROLLPANE_WIDTH = 300;
+		final int SCROLLPANE_HEIGHT = 200;
+		final int FRAME_MARGIN = 50;
+		final int FRAME_WIDTH = (FRAME_MARGIN<<1) + SCROLLPANE_WIDTH + 100;
+		final int FRAME_HEIGHT = (FRAME_MARGIN<<1) + SCROLLPANE_HEIGHT + ICON_HEIGHT + VERTICAL_GAP + 200;
+		final int FRAME_HALF_WIDTH = (FRAME_WIDTH>>1);
 
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.setSize(windowWidth, windowHeight);
+		frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
 
 		contentPane.setLayout(spring);
 
-// global vars
-		labelMasterPassword = new JLabel(currentLanguage.get(languages.STRING_MASTER_PASSWORD));
-		labelLanguage = new JLabel(currentLanguage.get(languages.STRING_LANGUAGE));
-		labelCharacterSet = new JLabel(currentLanguage.get(languages.STRING_CHARACTER_SET));
+	/*
+	 * These labels are global variables so that on
+	 * language change their text can be changed
+	 * from a callback function.
+	 */
+		labelMasterPassword = new GenericLabel(currentLanguage.get(languages.STRING_MASTER_PASSWORD));
+		labelLanguage = new GenericLabel(currentLanguage.get(languages.STRING_LANGUAGE));
+		labelCharacterSet = new GenericLabel(currentLanguage.get(languages.STRING_CHARACTER_SET));
 
-		labelMasterPassword.setFont(fontLabel);
-		labelLanguage.setFont(fontLabel);
-		labelCharacterSet.setFont(fontLabel);
-
-		JTextField tfMasterPassword = new JTextField(" **************** ");
+		JTextField tfMasterPassword = new GenericTextField(" **************** ");
 
 		JPanel buttonGrid = new JPanel(new GridLayout(0, 1));
 
@@ -1907,17 +1923,34 @@ public class PasswordManager extends JFrame
 			JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS
 		);
 
+		ArrayList<String> availableLanguages = languages.getLanguageNames();
+		Dimension sizeButton = new Dimension(SCROLLPANE_WIDTH, 30);
+
+		for (int i = 0; i < availableLanguages.size(); ++i)
+		{
+			JButton button = new JButton(availableLanguages.get(i));
+			button.setBackground(colorButtonDeselected);
+			button.setFont(fontInput);
+			button.setPreferredSize(sizeButton);
+			button.addActionListener(new settingsLanguageButtonListener());
+
+			buttonGrid.add(button);
+		}
+
+		scrollPane.setPreferredSize(new Dimension(SCROLLPANE_WIDTH, SCROLLPANE_HEIGHT));
+
+/*
 		JButton buttonEnglish = new JButton("English");
 		JButton buttonFrench = new JButton("Français");
 		JButton buttonKorean = new JButton("한국어");
 		JButton buttonMalaysian = new JButton("Bahasa Melayu");
-
-		scrollPane.setPreferredSize(new Dimension(scrollPaneWidth, scrollPaneHeight));
+		JButton buttonRussian = new JButton("Русский");
 
 		buttonEnglish.setBackground(colorButtonDeselected);
 		buttonFrench.setBackground(colorButtonDeselected);
 		buttonKorean.setBackground(colorButtonDeselected);
 		buttonMalaysian.setBackground(colorButtonDeselected);
+		buttonRussian.setBackground(colorButtonDeselected);
 
 		buttonEnglish.setFont(fontInput);
 		buttonFrench.setFont(fontInput);
@@ -1933,6 +1966,7 @@ public class PasswordManager extends JFrame
 		buttonGrid.add(buttonFrench);
 		buttonGrid.add(buttonKorean);
 		buttonGrid.add(buttonMalaysian);
+*/
 
 		tfMasterPassword.setFont(fontDetails);
 		//tfMasterPassword.setPreferredSize(new Dimension(250, 30));
@@ -1940,54 +1974,46 @@ public class PasswordManager extends JFrame
 		tfMasterPassword.setBorder(null);
 		tfMasterPassword.setEditable(false);
 
-		int iconWidth = iconEdit32.getIconWidth();
-		int iconHeight = iconEdit32.getIconHeight();
-		Dimension iconSize = new Dimension(iconWidth + 10, iconHeight + 10);
+		//Dimension iconSize = new Dimension(ICON_WIDTH);
 
-		JButton buttonChangeMaster = new JButton(iconEdit32);
-		buttonChangeMaster.setBackground(colorFrame);
-		buttonChangeMaster.setPreferredSize(iconSize);
-		buttonChangeMaster.setBorder(null);
+		JButton buttonChangeMaster = new TransparentButton(iconEdit32);
+		//buttonChangeMaster.setPreferredSize(iconSize);
 
-		JButton buttonChangeLanguage = new JButton(iconEdit32);
-		buttonChangeLanguage.setBackground(colorFrame);
-		buttonChangeLanguage.setPreferredSize(iconSize);
-		buttonChangeLanguage.setBorder(null);
+		JButton buttonChangeLanguage = new TransparentButton(iconEdit32);
+		//buttonChangeLanguage.setPreferredSize(iconSize);
 
-		JButton buttonAdjustCharacterSet = new JButton(iconEdit32);
-		buttonAdjustCharacterSet.setBackground(colorFrame);
-		buttonAdjustCharacterSet.setPreferredSize(iconSize);
-		buttonAdjustCharacterSet.setBorder(null);
+		JButton buttonAdjustCharacterSet = new TransparentButton(iconEdit32);
+		//buttonAdjustCharacterSet.setPreferredSize(iconSize);
 
-		final int iconWest = (halfWidth - (iconSettings128.getIconWidth()>>1));
-		final int leftOffset = 20;
-		final int scrollPaneWest = (halfWidth - (scrollPaneWidth>>1));
+		final int MAIN_ICON_WEST = (FRAME_HALF_WIDTH - (ICON_WIDTH>>1));
+		final int SCROLLPANE_WEST = (FRAME_HALF_WIDTH - (SCROLLPANE_WIDTH>>1));
+		final int LABEL_FIELD_GAP = 10;
 
-		spring.putConstraint(SpringLayout.WEST, containerSettingsIcon, iconWest, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, containerSettingsIcon, 60, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.WEST, containerSettingsIcon, MAIN_ICON_WEST, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, containerSettingsIcon, FRAME_MARGIN, SpringLayout.NORTH, contentPane);
 
-		spring.putConstraint(SpringLayout.WEST, labelMasterPassword, leftOffset, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, labelMasterPassword, 20, SpringLayout.SOUTH, containerSettingsIcon);
+		spring.putConstraint(SpringLayout.WEST, labelMasterPassword, LEFT_OFFSET, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, labelMasterPassword, VERTICAL_GAP, SpringLayout.SOUTH, containerSettingsIcon);
 
-		spring.putConstraint(SpringLayout.WEST, tfMasterPassword, 10, SpringLayout.EAST, labelMasterPassword);
+		spring.putConstraint(SpringLayout.WEST, tfMasterPassword, LABEL_FIELD_GAP, SpringLayout.EAST, labelMasterPassword);
 		spring.putConstraint(SpringLayout.NORTH, tfMasterPassword, 5, SpringLayout.NORTH, labelMasterPassword);
 
-		spring.putConstraint(SpringLayout.EAST, buttonChangeMaster, -30, SpringLayout.EAST, contentPane);
+		spring.putConstraint(SpringLayout.EAST, buttonChangeMaster, -FRAME_MARGIN, SpringLayout.EAST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, buttonChangeMaster, 2, SpringLayout.NORTH, tfMasterPassword);
 
-		spring.putConstraint(SpringLayout.WEST, labelLanguage, leftOffset, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, labelLanguage, LEFT_OFFSET, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelLanguage, 30, SpringLayout.SOUTH, tfMasterPassword);
 
-		spring.putConstraint(SpringLayout.WEST, scrollPane, scrollPaneWest, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, scrollPane, SCROLLPANE_WEST, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, scrollPane, 20, SpringLayout.SOUTH, labelLanguage);
 
-		spring.putConstraint(SpringLayout.EAST, buttonChangeLanguage, -30, SpringLayout.EAST, contentPane);
+		spring.putConstraint(SpringLayout.EAST, buttonChangeLanguage, -FRAME_MARGIN, SpringLayout.EAST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, buttonChangeLanguage, 2, SpringLayout.NORTH, scrollPane);
 
-		spring.putConstraint(SpringLayout.WEST, labelCharacterSet, leftOffset, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.WEST, labelCharacterSet, LEFT_OFFSET, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, labelCharacterSet, 30, SpringLayout.SOUTH, scrollPane);
 
-		spring.putConstraint(SpringLayout.EAST, buttonAdjustCharacterSet, -30, SpringLayout.EAST, contentPane);
+		spring.putConstraint(SpringLayout.EAST, buttonAdjustCharacterSet, -FRAME_MARGIN, SpringLayout.EAST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, buttonAdjustCharacterSet, 2, SpringLayout.NORTH, labelCharacterSet);
 
 		contentPane.add(containerSettingsIcon);
@@ -3629,6 +3655,37 @@ public class PasswordManager extends JFrame
 		}
 	}
 
+	private void doSearchPasswordId(String id)
+	{
+		if (0 == id.length())
+			return;
+
+		DefaultMutableTreeNode r = (DefaultMutableTreeNode)treeModel.getRoot();
+		boolean found = false;
+
+		for (DefaultMutableTreeNode n = (DefaultMutableTreeNode)r.getFirstChild();
+			null != n;
+			n = (DefaultMutableTreeNode)n.getNextSibling())
+		{
+			if (n.toString().equals(id))
+			{
+				TreePath p = new TreePath(n.getPath());
+				Rectangle area = tree.getPathBounds(p);
+				area.height = tree.getVisibleRect().height;
+				tree.scrollRectToVisible(area);
+				tree.expandPath(p);
+				
+				found = true;
+				break;
+			}
+		}
+
+		if (false == found)
+			showErrorDialog(currentLanguage.get(languages.STRING_ERROR_PASSWORD_ID));
+
+		return;
+	}
+
 	public void setupGUI()
 	{
 /*
@@ -3642,17 +3699,18 @@ public class PasswordManager extends JFrame
 
 		final int PANEL_SCROLLBAR_GAP = 40;
 		final int FRAME_MARGIN = 50;
-		final int TREE_SCROLLBAR_WIDTH = 400;
+		final int TREE_SCROLLBAR_WIDTH = 450;
 		final int TREE_SCROLLBAR_HEIGHT = 500;
 		//final int TOOLBAR_WIDTH = 350;
 		final int PANEL_BUTTONS_HEIGHT = 50;
 		final int PANEL_DETAILS_WIDTH = 480;
 		final int PANEL_DETAILS_HEIGHT = TREE_SCROLLBAR_HEIGHT - PANEL_BUTTONS_HEIGHT;
+		final int TF_HEIGHT = 27;
 		final int FRAME_WIDTH = (FRAME_MARGIN<<1) + TREE_SCROLLBAR_WIDTH + PANEL_SCROLLBAR_GAP + PANEL_DETAILS_WIDTH;
-		final int FRAME_HEIGHT = ICON_HEIGHT + VERTICAL_GAP + FRAME_MARGIN + (FRAME_MARGIN<<1) + TREE_SCROLLBAR_HEIGHT;
-
+		final int FRAME_HEIGHT = ICON_HEIGHT + (VERTICAL_GAP<<1) + FRAME_MARGIN + TF_HEIGHT + (FRAME_MARGIN<<1) + TREE_SCROLLBAR_HEIGHT;
+		final int TF_SEARCH_WIDTH = (FRAME_WIDTH/3);
+		final int TF_SEARCH_HEIGHT = 32;
 		final int TF_DETAILS_WIDTH = 400;
-		final int TF_DETAILS_HEIGHT = 27;
 
 		final int HALF_FRAME_WIDTH = (FRAME_WIDTH>>1);
 
@@ -3665,11 +3723,22 @@ public class PasswordManager extends JFrame
 
 		contentPane.setBackground(colorFrame);
 
+		JTextField tfSearch = new GenericTextField("");
+		tfSearch.setBackground(new Color(250, 250, 250));
+		tfSearch.setPreferredSize(new Dimension(TF_SEARCH_WIDTH, TF_SEARCH_HEIGHT));
+
+		Image image = iconSearch32.getImage();
+		Image newImage = image.getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
+
+		ImageIcon iconSearch27 = new ImageIcon(newImage);
+		JButton buttonSearch = new GenericButton(iconSearch27);
+		buttonSearch.setPreferredSize(new Dimension(32, 32));
+
 		JPanel panelButtons = new JPanel();
 		JLabel unlockedContainer = new JLabel(iconShield128);
 
 		JButton buttonAdd = new GenericButton(iconAdd32);
-		JButton buttonView = new GenericButton(iconView32);
+		//JButton buttonView = new GenericButton(iconView32);
 		JButton buttonChange = new GenericButton(iconChange32);
 		JButton buttonSet = new GenericButton(iconCog32);
 		JButton buttonUpload = new GenericButton(iconUpload32);
@@ -3680,11 +3749,12 @@ public class PasswordManager extends JFrame
 		final int buttonsPerRow = 8;
 
 		panelButtons.add(buttonAdd);
-		panelButtons.add(buttonView);
+		//panelButtons.add(buttonView);
 		panelButtons.add(buttonChange);
 		panelButtons.add(buttonUpload);
 		panelButtons.add(buttonDownload);
 		panelButtons.add(buttonRemove);
+		panelButtons.add(buttonSet);
 
 // global var
 		taAppName = new JTextArea(currentLanguage.get(languages.STRING_APPLICATION_NAME));
@@ -3780,7 +3850,7 @@ public class PasswordManager extends JFrame
 
 		panelSelected.setLayout(spring2);
 
-		Dimension tfsSize = new Dimension(TF_DETAILS_WIDTH, TF_DETAILS_HEIGHT);
+		Dimension tfsSize = new Dimension(TF_DETAILS_WIDTH, TF_HEIGHT);
 
 		tfSelectedEmail = new TransparentTextField("");
 		tfSelectedUsername = new TransparentTextField("");
@@ -3788,11 +3858,11 @@ public class PasswordManager extends JFrame
 		tfSelectedPasswordAgeInDays = new TransparentTextField("");
 		tfSelectedPassword = new TransparentTextField("");
 
-		JLabel labelSelectedEmail = new GenericLabel(currentLanguage.get(languages.STRING_EMAIL));
-		JLabel labelSelectedUsername = new GenericLabel(currentLanguage.get(languages.STRING_USERNAME));
-		JLabel labelSelectedPasswordLen = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD_LENGTH));
-		JLabel labelSelectedPasswordAgeInDays = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD_AGE_DAYS));
-		JLabel labelSelectedPassword = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD));
+		labelSelectedEmail = new GenericLabel(currentLanguage.get(languages.STRING_EMAIL));
+		labelSelectedUsername = new GenericLabel(currentLanguage.get(languages.STRING_USERNAME));
+		labelSelectedPasswordLen = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD_LENGTH));
+		labelSelectedPasswordAgeInDays = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD_AGE_DAYS));
+		labelSelectedPassword = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD));
 
 		JButton buttonCopyEmail = new TransparentButton(iconCopy32);
 		JButton buttonCopyUsername = new TransparentButton(iconCopy32);
@@ -3906,15 +3976,22 @@ public class PasswordManager extends JFrame
 
 		//scrollPane.getHorizontalScrollBar().setUI(new javax.swing.plaf.synth.SynthScrollBarUI());
 		//scrollPane.getVerticalScrollBar().setUI(new javax.swing.plaf.synth.SynthScrollBarUI());
+		final int TF_SEARCH_WEST = (HALF_FRAME_WIDTH - (TF_SEARCH_WIDTH>>1) - (27>>1));
 
 		spring.putConstraint(SpringLayout.WEST, unlockedContainer, HALF_FRAME_WIDTH-(ICON_WIDTH+80), SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, unlockedContainer, 40, SpringLayout.NORTH, contentPane);
+
+		spring.putConstraint(SpringLayout.WEST, tfSearch, TF_SEARCH_WEST, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, tfSearch, VERTICAL_GAP, SpringLayout.SOUTH, unlockedContainer);
+
+		spring.putConstraint(SpringLayout.WEST, buttonSearch, 0, SpringLayout.EAST, tfSearch);
+		spring.putConstraint(SpringLayout.NORTH, buttonSearch, 0, SpringLayout.NORTH, tfSearch);
 
 		spring.putConstraint(SpringLayout.WEST, taAppName, 20, SpringLayout.EAST, unlockedContainer);
 		spring.putConstraint(SpringLayout.NORTH, taAppName, (ICON_HEIGHT>>1)-20, SpringLayout.NORTH, unlockedContainer);
 
 		spring.putConstraint(SpringLayout.WEST, sp, FRAME_MARGIN, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, sp, VERTICAL_GAP, SpringLayout.SOUTH, unlockedContainer);
+		spring.putConstraint(SpringLayout.NORTH, sp, VERTICAL_GAP, SpringLayout.SOUTH, tfSearch);
 
 		spring.putConstraint(SpringLayout.WEST, panelSelected, PANEL_SCROLLBAR_GAP, SpringLayout.EAST, sp);
 		spring.putConstraint(SpringLayout.NORTH, panelSelected, 0, SpringLayout.NORTH, sp);
@@ -3929,6 +4006,8 @@ public class PasswordManager extends JFrame
 
 		contentPane.add(unlockedContainer);
 		contentPane.add(taAppName);
+		contentPane.add(tfSearch);
+		contentPane.add(buttonSearch);
 		//contentPane.add(scrollPane);
 		contentPane.add(sp);
 		contentPane.add(panelSelected);
@@ -3945,6 +4024,18 @@ public class PasswordManager extends JFrame
 		{
 			doInitialConfiguration();
 		}
+
+		buttonSearch.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				if (null == tree)
+					return;
+
+				doSearchPasswordId(tfSearch.getText());
+				tfSearch.setText("");
+			}
+		});
 
 		buttonSet.addActionListener(new ActionListener() {
 			@Override
@@ -3963,6 +4054,7 @@ public class PasswordManager extends JFrame
 			}
 		});
 
+/*
 		buttonView.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event)
@@ -3992,6 +4084,7 @@ public class PasswordManager extends JFrame
 				);
 			}
 		});
+*/
 
 		buttonRemove.addActionListener(new ActionListener() {
 			@Override
@@ -4030,7 +4123,6 @@ public class PasswordManager extends JFrame
 				showDownloadBackupWindow();
 			}
 		});
-
 /*
 		table
 			.getSelectionModel()
