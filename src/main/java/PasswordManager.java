@@ -117,6 +117,7 @@ class PDefaultMutableTreeNode extends DefaultMutableTreeNode
 	}
 }
 
+/*
 class ExcelAdapter implements ActionListener
 {
 	private String rowString;
@@ -163,6 +164,7 @@ class ExcelAdapter implements ActionListener
 		}
 	}
 }
+*/
 
 public class PasswordManager extends JFrame
 {
