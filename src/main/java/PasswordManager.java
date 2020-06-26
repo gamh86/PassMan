@@ -1818,7 +1818,7 @@ public class PasswordManager extends JFrame
 			fOut.flush();
 			fOut.close();
 
-			currentLanguage = languages.getLanguageFromString(settingsSelectedLanguage.getText());
+			currentLanguage = languages.getLanguageFromName(settingsSelectedLanguage.getText());
 			showInfoDialog(currentLanguage.get(languages.STRING_PROMPT_CHANGED_LANGUAGE));
 
 		/*
@@ -4188,7 +4188,7 @@ public class PasswordManager extends JFrame
 			/*
 			 * Defaults to English if the string is invalid.
 			 */
-				currentLanguage = languages.getLanguageFromString(currentlySelectedLanguage.getText());
+				currentLanguage = languages.getLanguageFromName(currentlySelectedLanguage.getText());
 
 				contentPane.remove(containerIconSettings);
 				contentPane.remove(scrollPane);
@@ -4224,7 +4224,7 @@ public class PasswordManager extends JFrame
 				fIn.read(data, 0, (int)f.length());
 				RuntimeOptions rOpts = mapper.readValue(data, RuntimeOptions.class);
 
-				currentLanguage = languages.getLanguageFromString(rOpts.getLanguage());
+				currentLanguage = languages.getLanguageFromName(rOpts.getLanguage());
 			}
 			catch (Exception e)
 			{
