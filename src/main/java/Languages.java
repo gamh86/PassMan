@@ -99,7 +99,7 @@ public class Languages
 	public static final int FRENCH = 3;
 	public static final int RUSSIAN = 4;
 
-	private ArrayList<String> languageValues = null;
+	private ArrayList<String> languageNames = null;
 	private ArrayList<Map<Integer,String> > _languages_;
 
 	public Languages()
@@ -112,15 +112,15 @@ public class Languages
 		_languages_.add(languageFrench);
 		_languages_.add(languageRussian);
 
-		languageValues = new ArrayList<>();
+		languageNames = new ArrayList<>();
 	/*
 	 * Can then use .indexOf(<language string>) to get the correct index.
 	 */
-		languageValues.add("한국어");
-		languageValues.add("English");
-		languageValues.add("Bahasa Melayu");
-		languageValues.add("Français");
-		languageValues.add("Русский");
+		languageNames.add("한국어");
+		languageNames.add("English");
+		languageNames.add("Bahasa Melayu");
+		languageNames.add("Français");
+		languageNames.add("Русский");
 	}
 
 	private static Map<Integer,String> getLanguageStringsKorean()
@@ -599,8 +599,8 @@ public class Languages
 	/**
 	 * Get a language map from string (e.g., "English")
 	 */
-	public Map<Integer,String> getLanguageFromString(String s)
+	public Map<Integer,String> getLanguageFromName(String name)
 	{
-		return getLanguage(languageValues.indexOf(s));
+		return getLanguage(languageNames.indexOf(name));
 	}
 }
