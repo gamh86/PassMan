@@ -193,7 +193,7 @@ public class PasswordManager extends JFrame
 	private final int SCREEN_HEIGHT;
 
 	private static final long MILLIS_PER_DAY = 86400000;
-	private static final int DEFAULT_PASSWORD_LIFETIME = 72; // days
+	private static final int PASSWORD_LIFETIME = 72; // days
 
 	private static final String DATE_FORMAT = "dd-MM-YYYY HH:mm:ss";
 
@@ -237,6 +237,12 @@ public class PasswordManager extends JFrame
 	private JLabel labelSelectedPasswordLen = null;
 	private JLabel labelSelectedPasswordAgeInDays = null;
 	private JLabel labelSelectedPassword = null;
+
+/*
+ * Shown next to the password age.
+ */
+	private JLabel staleIcon = null;
+	private JLabel freshIcon = null;
 
 /*
  * Various global fonts/colours
@@ -2771,34 +2777,33 @@ public class PasswordManager extends JFrame
 		showInfoDialog(currentLanguage.get(languages.STRING_PROMPT_PASSWORD_REMOVED));
 	}
 
-	private void doChangePasswordEntryDetails(String hash)
+	private void doChangePasswordEntryDetails()
 	{
-		if (null == hash)
-		{
-			showErrorDialog("doChangePasswordEntryDetails(): received NULL argument");
-			return;
-		}
-
 		if (null == passwordEntries)
 		{
 			showErrorDialog("No passwords");
 			return;
 		}
 
-		if (-1 == currentlySelectedRow)
+		if (null == currentTreePath)
 		{
-			showErrorDialog("No selected row");
+			showErrorDialog("No selected tree node...");
 			return;
 		}
+
+		DefaultMutableTreeNode __n = (DefaultMutableTreeNode)currentTreePath.getLastPathComponent();
+		if (null == __n || false == __n.isLeaf())
+		{
+			showErrorDialog("Select a password entry in tree!");
+			return;
+		}
+
+		PDefaultMutableTreeNode n = (PDefaultMutableTreeNode)__n;
+		PasswordEntry entry = n.getPasswordEntry();
 
 		JFrame frame = new JFrame();
 		Container contentPane = frame.getContentPane();
 		SpringLayout spring = new SpringLayout();
-
-		//final int windowWidth = 650;
-		//final int windowHeight = 700;
-		//final int tfWidth = 450;
-		//final int tfHeight = 25;
 
 		frame.setSize(SZ_WINDOW_WIDTH_DETAILS, SZ_WINDOW_HEIGHT_DETAILS);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -2807,41 +2812,22 @@ public class PasswordManager extends JFrame
 
 		JLabel iconContainer = new JLabel(iconLocked64);
 
-		JLabel labelEmail = new JLabel("Email");
-		JLabel labelUsername = new JLabel(currentLanguage.get(languages.STRING_USERNAME));
-		JLabel labelPassword = new JLabel(currentLanguage.get(languages.STRING_PASSWORD));
-		JLabel labelPasswordLen = new JLabel(currentLanguage.get(languages.STRING_PASSWORD_LENGTH_MIN_MAX));
+		JLabel labelEmail = new GenericLabel("Email");
+		JLabel labelUsername = new GenericLabel(currentLanguage.get(languages.STRING_USERNAME));
+		JLabel labelPassword = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD));
+		JLabel labelPasswordLen = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD_LENGTH_MIN_MAX));
 
-		Font fLabel = new Font("Courier New", Font.PLAIN, 16);
-
-		labelEmail.setFont(fLabel);
-		labelUsername.setFont(fLabel);
-		labelPassword.setFont(fLabel);
-		labelPasswordLen.setFont(fLabel);
-
-		PasswordEntry entry = getEntryForHash(hash);
-
-		JTextField tfEmail = new JTextField(entry.getEmail());
-		JTextField tfUsername = new JTextField(entry.getUsername());
-		JTextField tfPassword = new JTextField();
-		JTextField tfPasswordLen = new JTextField();
+		JTextField tfEmail = new GenericTextField(entry.getEmail());
+		JTextField tfUsername = new GenericTextField(entry.getUsername());
+		JTextField tfPassword = new GenericTextField(entry.getPassword());
+		JTextField tfPasswordLen = new GenericTextField("");
 
 		Dimension sizeTextField = new Dimension(SZ_TEXTFIELD_WIDTH_DETAILS, SZ_TEXTFIELD_HEIGHT_DETAILS);
-
-		tfEmail.setFont(fontInput);
-		tfUsername.setFont(fontInput);
-		tfPassword.setFont(fontInput);
-		tfPasswordLen.setFont(fontInput);
 
 		tfEmail.setPreferredSize(sizeTextField);
 		tfUsername.setPreferredSize(sizeTextField);
 		tfPassword.setPreferredSize(sizeTextField);
 		tfPasswordLen.setPreferredSize(sizeTextField);
-
-		tfEmail.setComponentPopupMenu(new RightClickPopup().getMenu());
-		tfUsername.setComponentPopupMenu(new RightClickPopup().getMenu());
-		tfPassword.setComponentPopupMenu(new RightClickPopup().getMenu());
-		tfPasswordLen.setComponentPopupMenu(new RightClickPopup().getMenu());
 
 	/*
  	 * Make the starting condition that none are being modified.
@@ -2856,10 +2842,12 @@ public class PasswordManager extends JFrame
 		JCheckBox checkModifyPassword = new JCheckBox(currentLanguage.get(languages.STRING_CHANGE_PASSWORD), false);
 		JCheckBox checkGenerateRandom = new JCheckBox(currentLanguage.get(languages.STRING_GENERATE_RANDOM), false);
 
+		checkGenerateRandom.setEnabled(false);
+
 		JButton buttonConfirm = new JButton(iconConfirm32);
 		JButton buttonChangeCharset = new JButton(iconSpanner32);
-		JLabel labelChangeCharset = new JLabel("Charset");
-		JLabel labelConfirm = new JLabel("Confirm");
+		JLabel labelChangeCharset = new JLabel(currentLanguage.get(languages.STRING_CHARACTER_SET));
+		JLabel labelConfirm = new JLabel(currentLanguage.get(languages.STRING_CONFIRM));
 
 		buttonConfirm.setBackground(colorFrame);
 		buttonConfirm.setBorder(null);
@@ -3004,7 +2992,7 @@ public class PasswordManager extends JFrame
 				}
 				else
 				{
-					tfPassword.setText("");
+					tfPassword.setText(tfSelectedPassword.getText());
 					tfPassword.setEditable(false);
 					tfPasswordLen.setText("");
 					tfPasswordLen.setEditable(false);
@@ -3035,6 +3023,7 @@ public class PasswordManager extends JFrame
 				else
 				{
 					tfPassword.setEditable(true);
+					tfPassword.setText(tfSelectedPassword.getText());
 					tfPasswordLen.setText("");
 					tfPasswordLen.setEditable(false);
 				}
@@ -3054,16 +3043,10 @@ public class PasswordManager extends JFrame
 				String passwordLen = null;
 				String oldPassword = null;
 
-				if (-1 == currentlySelectedRow)
-				{
-					showErrorDialog("No row selected");
-					return;
-				}
-
-				String hash = (String)table.getValueAt(currentlySelectedRow, IDX_UNIQUE_ID);
-				PasswordEntry entry = getEntryForHash(hash);
+			/*
+			 * ENTRY already defined above.
+			 */
 				oldPassword = entry.getPassword();
-
 				String oldEmail = null;
 
 				if (true == checkModifyEmail.isSelected())
@@ -3123,8 +3106,6 @@ public class PasswordManager extends JFrame
 				{
 					entry.setEmail(newEmail);
 					entry.setHash(getUniqueId(entry));
-
-					model.setValueAt(newEmail, currentlySelectedRow, IDX_EMAIL);
 				}
 
 				if (null != newUsername)
@@ -3132,26 +3113,28 @@ public class PasswordManager extends JFrame
 					entry.setUsername(newUsername);
 					entry.setHash(getUniqueId(entry));
 
-					model.setValueAt(newUsername, currentlySelectedRow, IDX_USERNAME);
+					tfSelectedUsername.setText(newUsername);
 				}
 
 			/*
-			 * The hash is based on email, username, and timestamp
+			 * User may press confirm with the modify password checkbox selected
+			 * but not actually changed the current password in the field.
+			 * So check that the password has changed.
 			 */
-				if (oldHash != entry.getHash())
-					model.setValueAt(entry.getHash(), currentlySelectedRow, IDX_UNIQUE_ID);
-
-				if (null != newPassword)
+				if (null != newPassword && false == newPassword.equals(tfSelectedPassword.getText()))
 				{
 					entry.setPassword(newPassword);
 					entry.setTimestamp(System.currentTimeMillis());
 
-					model.setValueAt(newPassword, currentlySelectedRow, IDX_PASSWORD);
-					model.setValueAt(newPassword.length(), currentlySelectedRow, IDX_PASSWORD_LENGTH);
+					tfSelectedPassword.setText(newPassword);
 				}
 
+				DefaultMutableTreeNode last = (DefaultMutableTreeNode)currentTreePath.getLastPathComponent();
+				DefaultMutableTreeNode parent = (DefaultMutableTreeNode)last.getParent();
+
+				System.out.println(parent.toString());
 				updatePasswordEntryInTree(
-					(String)model.getValueAt(currentlySelectedRow, IDX_PASSWORD_ID),
+					parent.toString(),
 					oldEmail,
 					entry
 				);
@@ -3161,12 +3144,6 @@ public class PasswordManager extends JFrame
 
 				revalidate();
 				repaint();
-
-				//if (null == newPassword)
-				//{
-				//	showPasswordDetails(entry);
-				//}
-				// XXX show changed password details
 
 				frame.dispose();
 			}
@@ -3571,7 +3548,6 @@ public class PasswordManager extends JFrame
 		ArrayList<PasswordEntry> list = null;
 		Iterator<PasswordEntry> it = null;
 
-		//PVector<Object> root = new PVector<Object>("Password IDs");
 		DefaultMutableTreeNode root = new DefaultMutableTreeNode(currentLanguage.get(languages.STRING_PASSWORD_IDS));
 
 		while (iter.hasNext())
@@ -3581,19 +3557,12 @@ public class PasswordManager extends JFrame
 			it = list.iterator();
 
 			DefaultMutableTreeNode nid = new DefaultMutableTreeNode(entry.getKey());
-			//PVector<Object> v1 = new PVector<Object>(entry.getKey());
 
 			while (it.hasNext())
 			{
 				PasswordEntry e = it.next();
 
 				nid.add(new PDefaultMutableTreeNode(e));
-				//PVector<Object> v2 = new PVector<Object>(e.getEmail());
-				//v2.add(e.getUsername());
-				//v2.add(e.getPassword());
-				//v2.add(getAgeInDaysFromTimestamp(e.getTimestamp()) + " days old");
-				//v2.add("Hash: " + e.getHash());
-				//v1.add(v2);
 			}
 
 			root.add(nid);
@@ -3635,21 +3604,34 @@ public class PasswordManager extends JFrame
 
 			if (null == __n || false == __n.isLeaf())
 			{
-					clearSelectedDetailsFields();
-					return;
+				clearSelectedDetailsFields();
+				return;
 			}
 
 			PDefaultMutableTreeNode n = (PDefaultMutableTreeNode)__n;
-
 			PasswordEntry entry = n.getPasswordEntry();
+
 			if (null == entry)
 				return;
+
+			int age = getAgeInDaysFromTimestamp(entry.getTimestamp());
 
 			tfSelectedPasswordLen.setText("" + entry.getPassword().length());
 			tfSelectedPassword.setText(entry.getPassword());
 			tfSelectedEmail.setText(entry.getEmail());
 			tfSelectedUsername.setText(entry.getUsername());;
-			tfSelectedPasswordAgeInDays.setText("" + getAgeInDaysFromTimestamp(entry.getTimestamp()));
+			tfSelectedPasswordAgeInDays.setText("" + age);
+
+			if (PASSWORD_LIFETIME <= age)
+			{
+				staleIcon.setVisible(true);
+				freshIcon.setVisible(false);
+			}
+			else
+			{
+				staleIcon.setVisible(false);
+				freshIcon.setVisible(true);
+			}
 
 			revalidate();
 		}
@@ -3700,14 +3682,14 @@ public class PasswordManager extends JFrame
 		final int PANEL_SCROLLBAR_GAP = 40;
 		final int FRAME_MARGIN = 50;
 		final int TREE_SCROLLBAR_WIDTH = 450;
-		final int TREE_SCROLLBAR_HEIGHT = 500;
+		final int TREE_SCROLLBAR_HEIGHT = 350;
 		//final int TOOLBAR_WIDTH = 350;
 		final int PANEL_BUTTONS_HEIGHT = 50;
 		final int PANEL_DETAILS_WIDTH = 480;
-		final int PANEL_DETAILS_HEIGHT = TREE_SCROLLBAR_HEIGHT - PANEL_BUTTONS_HEIGHT;
+		final int PANEL_DETAILS_HEIGHT = TREE_SCROLLBAR_HEIGHT;
 		final int TF_HEIGHT = 27;
 		final int FRAME_WIDTH = (FRAME_MARGIN<<1) + TREE_SCROLLBAR_WIDTH + PANEL_SCROLLBAR_GAP + PANEL_DETAILS_WIDTH;
-		final int FRAME_HEIGHT = ICON_HEIGHT + (VERTICAL_GAP<<1) + FRAME_MARGIN + TF_HEIGHT + (FRAME_MARGIN<<1) + TREE_SCROLLBAR_HEIGHT;
+		final int FRAME_HEIGHT = ICON_HEIGHT + (VERTICAL_GAP<<1) + FRAME_MARGIN + TF_HEIGHT + (FRAME_MARGIN<<1) + TREE_SCROLLBAR_HEIGHT + PANEL_BUTTONS_HEIGHT;
 		final int TF_SEARCH_WIDTH = (FRAME_WIDTH/3);
 		final int TF_SEARCH_HEIGHT = 32;
 		final int TF_DETAILS_WIDTH = 400;
@@ -3738,7 +3720,6 @@ public class PasswordManager extends JFrame
 		JLabel unlockedContainer = new JLabel(iconShield128);
 
 		JButton buttonAdd = new GenericButton(iconAdd32);
-		//JButton buttonView = new GenericButton(iconView32);
 		JButton buttonChange = new GenericButton(iconChange32);
 		JButton buttonSet = new GenericButton(iconCog32);
 		JButton buttonUpload = new GenericButton(iconUpload32);
@@ -3765,66 +3746,6 @@ public class PasswordManager extends JFrame
 		taAppName.setBorder(null);
 		taAppName.setEditable(false);
 
-/*
-		final String[] columnNames = {
-			"Password ID",
-			"Email",
-			"Username",
-			"Password",
-			"Password Length",
-			"Age (days)",
-			"Unique ID"
-		};
-
-		model = new PTableModel(columnNames, 0); // global var
-
-		Set<Map.Entry<String,ArrayList<PasswordEntry>>> eSet = passwordEntries.entrySet();
-		Iterator<Map.Entry<String,ArrayList<PasswordEntry>>> iter = eSet.iterator();
-		Iterator<PasswordEntry> it = null;
-
-		while (iter.hasNext())
-		{
-			Map.Entry<String,ArrayList<PasswordEntry>> entry = iter.next();
-			it = entry.getValue().iterator();
-
-			while (it.hasNext())
-			{
-				PasswordEntry ent = it.next();
-
-				try
-				{
-					ent.setHash(getMD5(ent.getUsername() + ent.getTimestamp()));
-				}
-				catch (Exception e)
-				{
-					System.err.println(e.getMessage());
-				}
-
-				model.addRow(new Object[] {
-					entry.getKey(),
-					ent.getEmail(),
-					ent.getUsername(),
-					ent.getPassword(),
-					ent.getPassword().length(),
-					((System.currentTimeMillis() - ent.getTimestamp())/MILLIS_PER_DAY),
-					ent.getHash()
-				});
-			}
-		}
-
-		table = new JTable(model);
-		table.setFont(new Font("Courier New", Font.PLAIN, 20));
-
-		TableCellRenderer renderer = new PTableCellRenderer();
-		table.setDefaultRenderer(Object.class, renderer);
-
-		JScrollPane scrollPane = new JScrollPane(
-			table,
-			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-			JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
-		);
-*/
-
 		JTree tree = createPasswordEntryTree();
 		JScrollPane sp = new JScrollPane(
 			tree,
@@ -3832,17 +3753,7 @@ public class PasswordManager extends JFrame
 			JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
 		);
 
-
-
-		//final int tableWidth = FRAME_WIDTH-spWidth-80;
-		//final int tableHeight = spHeight;
-
-		//scrollPane.setPreferredSize(new Dimension(tableWidth, tableHeight));
 		sp.setPreferredSize(new Dimension(TREE_SCROLLBAR_WIDTH, TREE_SCROLLBAR_HEIGHT));
-
-		//table
-		//	.getTableHeader()
-		//	.setFont(fontLabel);
 
 		JPanel panelSelected = new JPanel();
 		panelSelected.setPreferredSize(new Dimension(PANEL_DETAILS_WIDTH, PANEL_DETAILS_HEIGHT));
@@ -3852,11 +3763,36 @@ public class PasswordManager extends JFrame
 
 		Dimension tfsSize = new Dimension(TF_DETAILS_WIDTH, TF_HEIGHT);
 
-		tfSelectedEmail = new TransparentTextField("");
-		tfSelectedUsername = new TransparentTextField("");
-		tfSelectedPasswordLen = new TransparentTextField("");
-		tfSelectedPasswordAgeInDays = new TransparentTextField("");
-		tfSelectedPassword = new TransparentTextField("");
+		tfSelectedEmail = new GenericTextField("");
+		tfSelectedUsername = new GenericTextField("");
+		tfSelectedPasswordLen = new GenericTextField("");
+		tfSelectedPasswordAgeInDays = new GenericTextField("");
+		tfSelectedPassword = new GenericTextField("");
+
+		tfSelectedEmail.setEditable(false);
+		tfSelectedUsername.setEditable(false);
+		tfSelectedPasswordLen.setEditable(false);
+		tfSelectedPasswordAgeInDays.setEditable(false);
+		tfSelectedPassword.setEditable(false);
+
+		tfSelectedEmail.setPreferredSize(tfsSize);
+		tfSelectedUsername.setPreferredSize(tfsSize);
+		tfSelectedPasswordLen.setPreferredSize(tfsSize);
+		tfSelectedPasswordAgeInDays.setPreferredSize(tfsSize);
+		tfSelectedPassword.setPreferredSize(tfsSize);
+
+		image = iconWarning32.getImage();
+		newImage = image.getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
+
+		ImageIcon iconWarning25 = new ImageIcon(newImage);
+
+		image = iconOk32.getImage();
+		newImage = image.getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
+
+		ImageIcon iconOk25 = new ImageIcon(newImage);
+
+		staleIcon = new JLabel(iconWarning25);
+		freshIcon = new JLabel(iconOk25);
 
 		labelSelectedEmail = new GenericLabel(currentLanguage.get(languages.STRING_EMAIL));
 		labelSelectedUsername = new GenericLabel(currentLanguage.get(languages.STRING_USERNAME));
@@ -3864,9 +3800,13 @@ public class PasswordManager extends JFrame
 		labelSelectedPasswordAgeInDays = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD_AGE_DAYS));
 		labelSelectedPassword = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD));
 
-		JButton buttonCopyEmail = new TransparentButton(iconCopy32);
-		JButton buttonCopyUsername = new TransparentButton(iconCopy32);
-		JButton buttonCopyPassword = new TransparentButton(iconCopy32);
+		image = iconCopy32.getImage();
+		newImage = image.getScaledInstance(25, 25, java.awt.Image.SCALE_SMOOTH);
+		ImageIcon iconCopy25 = new ImageIcon(newImage);
+
+		JButton buttonCopyEmail = new TransparentButton(iconCopy25);
+		JButton buttonCopyUsername = new TransparentButton(iconCopy25);
+		JButton buttonCopyPassword = new TransparentButton(iconCopy25);
 
 		buttonCopyEmail.setToolTipText(currentLanguage.get(languages.STRING_COPY_EMAIL));
 		buttonCopyUsername.setToolTipText(currentLanguage.get(languages.STRING_COPY_USERNAME));
@@ -3915,13 +3855,13 @@ public class PasswordManager extends JFrame
 	 * The layout of the labels and textfields within the panel which will
 	 * display the details of the selected leaf node in the JTree.
 	 */
-		final int LABEL_FIELD_GAP = 10;
-		final int FIELD_NEXT_LABEL_GAP = 20;
+		final int LABEL_FIELD_GAP = 8;
+		final int FIELD_NEXT_LABEL_GAP = 15;
 		final int WEST_GAP = 20;
 		final int LABEL_LEFT = 10;
 		final int TEXTFIELD_BUTTON_GAP = 20;
 
-		spring2.putConstraint(SpringLayout.NORTH, labelSelectedEmail, 20, SpringLayout.NORTH, panelSelected);
+		spring2.putConstraint(SpringLayout.NORTH, labelSelectedEmail, 0, SpringLayout.NORTH, panelSelected);
 		spring2.putConstraint(SpringLayout.WEST, labelSelectedEmail, LABEL_LEFT, SpringLayout.WEST, tfSelectedEmail);
 
 		spring2.putConstraint(SpringLayout.NORTH, tfSelectedEmail, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedEmail);
@@ -3948,6 +3888,12 @@ public class PasswordManager extends JFrame
 		spring2.putConstraint(SpringLayout.NORTH, labelSelectedPasswordAgeInDays, FIELD_NEXT_LABEL_GAP, SpringLayout.SOUTH, tfSelectedPasswordLen);
 		spring2.putConstraint(SpringLayout.WEST, labelSelectedPasswordAgeInDays, LABEL_LEFT, SpringLayout.WEST, tfSelectedPasswordAgeInDays);
 
+		spring2.putConstraint(SpringLayout.SOUTH, staleIcon, -10, SpringLayout.NORTH, tfSelectedPasswordAgeInDays);
+		spring2.putConstraint(SpringLayout.EAST, staleIcon, 0, SpringLayout.EAST, tfSelectedPasswordAgeInDays);
+
+		spring2.putConstraint(SpringLayout.SOUTH, freshIcon, -10, SpringLayout.NORTH, tfSelectedPasswordAgeInDays);
+		spring2.putConstraint(SpringLayout.EAST, freshIcon, 0, SpringLayout.EAST, tfSelectedPasswordAgeInDays);
+
 		spring2.putConstraint(SpringLayout.NORTH, tfSelectedPasswordAgeInDays, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedPasswordAgeInDays);
 		spring2.putConstraint(SpringLayout.WEST, tfSelectedPasswordAgeInDays, WEST_GAP, SpringLayout.WEST, panelSelected);
 
@@ -3960,6 +3906,9 @@ public class PasswordManager extends JFrame
 		spring2.putConstraint(SpringLayout.NORTH, buttonCopyPassword, 0, SpringLayout.NORTH, tfSelectedPassword);
 		spring2.putConstraint(SpringLayout.WEST, buttonCopyPassword, TEXTFIELD_BUTTON_GAP, SpringLayout.EAST, tfSelectedPassword);
 
+		staleIcon.setVisible(false);
+		freshIcon.setVisible(false);
+
 		panelSelected.add(labelSelectedEmail);
 		panelSelected.add(tfSelectedEmail);
 		panelSelected.add(buttonCopyEmail);
@@ -3969,6 +3918,8 @@ public class PasswordManager extends JFrame
 		panelSelected.add(labelSelectedPasswordLen);
 		panelSelected.add(tfSelectedPasswordLen);
 		panelSelected.add(labelSelectedPasswordAgeInDays);
+		panelSelected.add(staleIcon);
+		panelSelected.add(freshIcon);
 		panelSelected.add(tfSelectedPasswordAgeInDays);
 		panelSelected.add(labelSelectedPassword);
 		panelSelected.add(tfSelectedPassword);
@@ -3999,8 +3950,8 @@ public class PasswordManager extends JFrame
 		//spring.putConstraint(SpringLayout.WEST, scrollPane, 0, SpringLayout.EAST, sp);
 		//spring.putConstraint(SpringLayout.NORTH, scrollPane, 0, SpringLayout.NORTH, sp);
 
-		spring.putConstraint(SpringLayout.WEST, panelButtons, PANEL_SCROLLBAR_GAP, SpringLayout.EAST, sp);
-		spring.putConstraint(SpringLayout.SOUTH, panelButtons, 0, SpringLayout.SOUTH, sp);
+		spring.putConstraint(SpringLayout.WEST, panelButtons, FRAME_MARGIN, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, panelButtons, 0, SpringLayout.SOUTH, sp);
 
 		contentPane.setLayout(spring);
 
@@ -4101,10 +4052,10 @@ public class PasswordManager extends JFrame
 			@Override
 			public void actionPerformed(ActionEvent event)
 			{
-				if (-1 == currentlySelectedRow)
+				if (null == currentTreePath)
 					return;
 
-				doChangePasswordEntryDetails((String)table.getValueAt(currentlySelectedRow, IDX_UNIQUE_ID));
+				doChangePasswordEntryDetails();
 			}
 		});
 
