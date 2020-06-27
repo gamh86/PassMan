@@ -51,6 +51,8 @@ public class Languages
 	public static final int STRING_COPY_USERNAME = 0x029;
 	public static final int STRING_PASSWORD_LENGTH = 0x02a;
 	public static final int STRING_CONFIRM = 0x02c;
+	public static final int STRING_PASSWORD_IS_STALE = 0x02d;
+	public static final int STRING_PASSWORD_IS_FRESH = 0x02e;
 
 	public static final int STRING_PROMPT_DETAILS_CHANGED = 0x100;
 	public static final int STRING_PROMPT_PASSWORD_COPIED = 0x101;
@@ -172,6 +174,8 @@ public class Languages
 		map.put(STRING_COPY_EMAIL, "클립보드에게 이메일을 복사하기");
 		map.put(STRING_COPY_USERNAME, "클립보드에게 사용자 이름을 복사하기");
 		map.put(STRING_CONFIRM, "확인");
+		map.put(STRING_PASSWORD_IS_STALE, "비밀번호가 오래되었습니다");
+		map.put(STRING_PASSWORD_IS_FRESH, "비밀번호가 최신입니다");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "비밀번호 관리자 설정");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "비밀번호 설경");
@@ -268,6 +272,8 @@ public class Languages
 		map.put(STRING_COPY_USERNAME, "Copier pseudo");
 		map.put(STRING_CHARACTER_SET, "Jeu de caractères");
 		map.put(STRING_CONFIRM, "Confirmer");
+		map.put(STRING_PASSWORD_IS_STALE, "Mot de passe périmé");
+		map.put(STRING_PASSWORD_IS_FRESH, "Mot de passe toujours à jour");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Détails du mot de passe");
@@ -368,6 +374,8 @@ public class Languages
 		map.put(STRING_COPY_USERNAME, "Copy username");
 		//map.put(STRING_CHARACTER_SET, "Charset");
 		map.put(STRING_CONFIRM, "Confirm");
+		map.put(STRING_PASSWORD_IS_STALE, "Password is stale");
+		map.put(STRING_PASSWORD_IS_FRESH, "Password is still fresh");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Password Manager Configuration");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Password Details");
@@ -465,6 +473,8 @@ public class Languages
 		map.put(STRING_COPY_USERNAME, "Salin lengguna ke papan klip");
 		//map.put(STRING_CHARACTER_SET, "Set watak");
 		map.put(STRING_CONFIRM, "Mengesahkan");
+		map.put(STRING_PASSWORD_IS_STALE, "Kata laluan sudah basi");
+		map.put(STRING_PASSWORD_IS_FRESH, "Kata laluan masih baru");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Konfigurasi Pengurus Kata Laluan");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Butiran Kata Laluan");
@@ -554,6 +564,8 @@ public class Languages
 		map.put(STRING_COPY_EMAIL, "Скопировать эл. адрес");
 		map.put(STRING_COPY_USERNAME, "Скопировать имя пользователя");
 		map.put(STRING_CONFIRM, "Подтвердить");
+		map.put(STRING_PASSWORD_IS_STALE, "Пароль устарел");
+		map.put(STRING_PASSWORD_IS_FRESH, "Пароль свежий");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Конфигурация Менеджера Паролей");
 		//map.put(STRING_TITLE_PASSWORD_DETAILS, "Password Details");
