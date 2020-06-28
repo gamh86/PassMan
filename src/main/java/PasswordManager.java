@@ -1849,7 +1849,7 @@ public class PasswordManager extends JFrame
 
 			currentLanguageName = settingsSelectedLanguage.getText();
 			currentLanguage = languages.getLanguageFromName(currentLanguageName);
-			showInfoDialog(currentLanguage.get(languages.STRING_PROMPT_CHANGED_LANGUAGE));
+			showInfoDialog(currentLanguage.get(languages.STRING_PROMPT_LANGUAGE_CHANGED));
 
 		/*
 		 * Set the text in currently visible global GUI components
@@ -3695,180 +3695,6 @@ public class PasswordManager extends JFrame
 		return new ImageIcon(newImage);
 	}
 
-	private JPanel panelDetails = null;
-	private SpringLayout detailsLayout = null;
-
-	private void createPasswordDetailsPanel(int w, int h)
-	{
-		panelDetails = new JPanel();
-		detailsLayout = new SpringLayout();
-		panelDetails.setLayout(detailsLayout);
-
-		Dimension tfsSize = new Dimension(w, h);
-
-		tfSelectedEmail = new GenericTextField("", Font.ITALIC);
-		tfSelectedUsername = new GenericTextField("", Font.ITALIC);
-		tfSelectedPasswordLen = new GenericTextField("", Font.ITALIC);
-		tfSelectedPasswordAgeInDays = new GenericTextField("", Font.ITALIC);
-		tfSelectedPassword = new GenericTextField("", Font.ITALIC);
-
-		tfSelectedEmail.setEditable(false);
-		tfSelectedUsername.setEditable(false);
-		tfSelectedPasswordLen.setEditable(false);
-		tfSelectedPasswordAgeInDays.setEditable(false);
-		tfSelectedPassword.setEditable(false);
-
-		tfSelectedEmail.setPreferredSize(tfsSize);
-		tfSelectedUsername.setPreferredSize(tfsSize);
-		tfSelectedPasswordLen.setPreferredSize(tfsSize);
-		tfSelectedPasswordAgeInDays.setPreferredSize(tfsSize);
-		tfSelectedPassword.setPreferredSize(tfsSize);
-
-		tfSelectedEmail.setBorder(null);
-		tfSelectedUsername.setBorder(null);
-		tfSelectedPasswordLen.setBorder(null);
-		tfSelectedPasswordAgeInDays.setBorder(null);
-		tfSelectedPassword.setBorder(null);
-
-		staleIcon = new JLabel(getScaledImageIcon(iconWarning32, 20, 20));
-		freshIcon = new JLabel(getScaledImageIcon(iconOk32, 20, 20));
-
-		staleIcon.setToolTipText(currentLanguage.get(languages.STRING_PASSWORD_IS_STALE));
-		freshIcon.setToolTipText(currentLanguage.get(languages.STRING_PASSWORD_IS_FRESH));
-
-		labelSelectedEmail = new GenericLabel(currentLanguage.get(languages.STRING_EMAIL));
-		labelSelectedUsername = new GenericLabel(currentLanguage.get(languages.STRING_USERNAME));
-		labelSelectedPasswordLen = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD_LENGTH));
-		labelSelectedPasswordAgeInDays = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD_AGE_DAYS));
-		labelSelectedPassword = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD));
-
-		ImageIcon iconCopy25 = getScaledImageIcon(iconCopy32, 25, 25);
-
-		JButton buttonCopyEmail = new TransparentButton(iconCopy25);
-		JButton buttonCopyUsername = new TransparentButton(iconCopy25);
-		JButton buttonCopyPassword = new TransparentButton(iconCopy25);
-
-		buttonCopyEmail.setToolTipText(currentLanguage.get(languages.STRING_COPY_EMAIL));
-		buttonCopyUsername.setToolTipText(currentLanguage.get(languages.STRING_COPY_USERNAME));
-		buttonCopyPassword.setToolTipText(currentLanguage.get(languages.STRING_COPY_PASSWORD));
-
-		buttonCopyEmail.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent event)
-			{
-				Toolkit
-					.getDefaultToolkit()
-					.getSystemClipboard()
-					.setContents(new StringSelection(tfSelectedEmail.getText()), null);
-
-				showInfoDialog(currentLanguage.get(languages.STRING_PROMPT_EMAIL_COPIED));
-			}
-		});
-
-		buttonCopyUsername.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent event)
-			{
-				Toolkit
-					.getDefaultToolkit()
-					.getSystemClipboard()
-					.setContents(new StringSelection(tfSelectedUsername.getText()), null);
-
-				showInfoDialog(currentLanguage.get(languages.STRING_PROMPT_USERNAME_COPIED));
-			}
-		});
-
-		buttonCopyPassword.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent event)
-			{
-				Toolkit
-					.getDefaultToolkit()
-					.getSystemClipboard()
-					.setContents(new StringSelection(tfSelectedPassword.getText()), null);
-
-				showInfoDialog(currentLanguage.get(languages.STRING_PROMPT_PASSWORD_COPIED));
-			}
-		});
-
-	/*
-	 * The layout of the labels and textfields within the panel which will
-	 * display the details of the selected leaf node in the JTree.
-	 */
-		final int LABEL_FIELD_GAP = 8;
-		final int FIELD_NEXT_LABEL_GAP = 14;
-		final int WEST_GAP = 20;
-		final int VGAP = 20;
-		final int LABEL_LEFT = 5;
-		final int TEXTFIELD_BUTTON_GAP = 20;
-
-		detailsLayout.putConstraint(SpringLayout.NORTH, labelSelectedEmail, VGAP, SpringLayout.NORTH, panelDetails);
-		detailsLayout.putConstraint(SpringLayout.WEST, labelSelectedEmail, LABEL_LEFT, SpringLayout.WEST, tfSelectedEmail);
-
-		detailsLayout.putConstraint(SpringLayout.NORTH, tfSelectedEmail, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedEmail);
-		detailsLayout.putConstraint(SpringLayout.WEST, tfSelectedEmail, WEST_GAP, SpringLayout.WEST, panelDetails);
-
-		detailsLayout.putConstraint(SpringLayout.NORTH, buttonCopyEmail, 0, SpringLayout.NORTH, tfSelectedEmail);
-		detailsLayout.putConstraint(SpringLayout.WEST, buttonCopyEmail, TEXTFIELD_BUTTON_GAP, SpringLayout.EAST, tfSelectedEmail);
-
-		detailsLayout.putConstraint(SpringLayout.NORTH, labelSelectedUsername, FIELD_NEXT_LABEL_GAP, SpringLayout.SOUTH, tfSelectedEmail);
-		detailsLayout.putConstraint(SpringLayout.WEST, labelSelectedUsername, LABEL_LEFT, SpringLayout.WEST, tfSelectedUsername);
-
-		detailsLayout.putConstraint(SpringLayout.NORTH, tfSelectedUsername, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedUsername);
-		detailsLayout.putConstraint(SpringLayout.WEST, tfSelectedUsername, WEST_GAP, SpringLayout.WEST, panelDetails);
-
-		detailsLayout.putConstraint(SpringLayout.NORTH, buttonCopyUsername, 0, SpringLayout.NORTH, tfSelectedUsername);
-		detailsLayout.putConstraint(SpringLayout.WEST, buttonCopyUsername, TEXTFIELD_BUTTON_GAP, SpringLayout.EAST, tfSelectedUsername);
-
-		detailsLayout.putConstraint(SpringLayout.NORTH, labelSelectedPassword, FIELD_NEXT_LABEL_GAP, SpringLayout.SOUTH, tfSelectedUsername);
-		detailsLayout.putConstraint(SpringLayout.WEST, labelSelectedPassword, LABEL_LEFT, SpringLayout.WEST, tfSelectedPassword);
-
-		detailsLayout.putConstraint(SpringLayout.NORTH, tfSelectedPassword, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedPassword);
-		detailsLayout.putConstraint(SpringLayout.WEST, tfSelectedPassword, WEST_GAP, SpringLayout.WEST, panelDetails);
-
-		detailsLayout.putConstraint(SpringLayout.NORTH, buttonCopyPassword, 0, SpringLayout.NORTH, tfSelectedPassword);
-		detailsLayout.putConstraint(SpringLayout.WEST, buttonCopyPassword, TEXTFIELD_BUTTON_GAP, SpringLayout.EAST, tfSelectedPassword);
-
-		detailsLayout.putConstraint(SpringLayout.NORTH, labelSelectedPasswordLen, FIELD_NEXT_LABEL_GAP, SpringLayout.SOUTH, tfSelectedPassword);
-		detailsLayout.putConstraint(SpringLayout.WEST, labelSelectedPasswordLen, LABEL_LEFT, SpringLayout.WEST, tfSelectedPasswordLen);
-
-		detailsLayout.putConstraint(SpringLayout.NORTH, tfSelectedPasswordLen, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedPasswordLen);
-		detailsLayout.putConstraint(SpringLayout.WEST, tfSelectedPasswordLen, WEST_GAP, SpringLayout.WEST, panelDetails);
-
-		detailsLayout.putConstraint(SpringLayout.NORTH, labelSelectedPasswordAgeInDays, FIELD_NEXT_LABEL_GAP, SpringLayout.SOUTH, tfSelectedPasswordLen);
-		detailsLayout.putConstraint(SpringLayout.WEST, labelSelectedPasswordAgeInDays, LABEL_LEFT, SpringLayout.WEST, tfSelectedPasswordAgeInDays);
-
-		detailsLayout.putConstraint(SpringLayout.SOUTH, staleIcon, -10, SpringLayout.NORTH, tfSelectedPasswordAgeInDays);
-		detailsLayout.putConstraint(SpringLayout.EAST, staleIcon, 30, SpringLayout.EAST, labelSelectedPasswordAgeInDays);
-
-		detailsLayout.putConstraint(SpringLayout.SOUTH, freshIcon, -10, SpringLayout.NORTH, tfSelectedPasswordAgeInDays);
-		detailsLayout.putConstraint(SpringLayout.EAST, freshIcon, 30, SpringLayout.EAST, labelSelectedPasswordAgeInDays);
-
-		detailsLayout.putConstraint(SpringLayout.NORTH, tfSelectedPasswordAgeInDays, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedPasswordAgeInDays);
-		detailsLayout.putConstraint(SpringLayout.WEST, tfSelectedPasswordAgeInDays, WEST_GAP, SpringLayout.WEST, panelDetails);
-
-		staleIcon.setVisible(false);
-		freshIcon.setVisible(false);
-
-		panelDetails.add(labelSelectedEmail);
-		panelDetails.add(tfSelectedEmail);
-		panelDetails.add(buttonCopyEmail);
-		panelDetails.add(labelSelectedUsername);
-		panelDetails.add(tfSelectedUsername);
-		panelDetails.add(buttonCopyUsername);
-		panelDetails.add(labelSelectedPasswordLen);
-		panelDetails.add(tfSelectedPasswordLen);
-		panelDetails.add(labelSelectedPasswordAgeInDays);
-		panelDetails.add(staleIcon);
-		panelDetails.add(freshIcon);
-		panelDetails.add(tfSelectedPasswordAgeInDays);
-		panelDetails.add(labelSelectedPassword);
-		panelDetails.add(tfSelectedPassword);
-		panelDetails.add(buttonCopyPassword);
-
-		return;
-	}
-
 	private void setLanguageFlags()
 	{
 		final int FLAG_WIDTH = 34;
@@ -4032,7 +3858,7 @@ public class PasswordManager extends JFrame
 			{
 				if (null == currentlySelectedLanguage)
 				{
-					showErrorDialog("You must select a language");
+					showErrorDialog(currentLanguage.get(languages.STRING_ERROR_SELECT_LANGUAGE));
 					return;
 				}
 
@@ -4062,11 +3888,223 @@ public class PasswordManager extends JFrame
 			 * Reset all visible language strings.
 			 */
 				resetGloballyVisibleStrings();
+
+				showInfoDialog(currentLanguage.get(languages.STRING_PROMPT_LANGUAGE_CHANGED));
 			}
 		});
 
 		frame.setVisible(true);
 	}
+
+	private JPanel panelDetails = null;
+	private SpringLayout detailsLayout = null;
+
+	private void createPasswordDetailsPanel(int w, int h)
+	{
+		panelDetails = new JPanel();
+		detailsLayout = new SpringLayout();
+		panelDetails.setLayout(detailsLayout);
+
+		Dimension tfsSize = new Dimension(w, h);
+
+		tfSelectedEmail = new DetailsTextField("");
+		tfSelectedUsername = new DetailsTextField("");
+		tfSelectedPasswordLen = new DetailsTextField("");
+		tfSelectedPasswordAgeInDays = new DetailsTextField("");
+		tfSelectedPassword = new DetailsTextField("");
+
+		tfSelectedEmail.setPreferredSize(tfsSize);
+		tfSelectedUsername.setPreferredSize(tfsSize);
+		tfSelectedPasswordLen.setPreferredSize(tfsSize);
+		tfSelectedPasswordAgeInDays.setPreferredSize(tfsSize);
+		tfSelectedPassword.setPreferredSize(tfsSize);
+
+		staleIcon = new JLabel(getScaledImageIcon(iconWarning32, 20, 20));
+		freshIcon = new JLabel(getScaledImageIcon(iconOk32, 20, 20));
+
+		staleIcon.setToolTipText(currentLanguage.get(languages.STRING_PASSWORD_IS_STALE));
+		freshIcon.setToolTipText(currentLanguage.get(languages.STRING_PASSWORD_IS_FRESH));
+
+		labelSelectedEmail = new GenericLabel(currentLanguage.get(languages.STRING_EMAIL));
+		labelSelectedUsername = new GenericLabel(currentLanguage.get(languages.STRING_USERNAME));
+		labelSelectedPasswordLen = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD_LENGTH));
+		labelSelectedPasswordAgeInDays = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD_AGE_DAYS));
+		labelSelectedPassword = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD));
+
+		ImageIcon iconCopy25 = getScaledImageIcon(iconCopy32, 25, 25);
+
+		JButton buttonCopyEmail = new TransparentButton(iconCopy25);
+		JButton buttonCopyUsername = new TransparentButton(iconCopy25);
+		JButton buttonCopyPassword = new TransparentButton(iconCopy25);
+
+		buttonCopyEmail.setToolTipText(currentLanguage.get(languages.STRING_COPY_EMAIL));
+		buttonCopyUsername.setToolTipText(currentLanguage.get(languages.STRING_COPY_USERNAME));
+		buttonCopyPassword.setToolTipText(currentLanguage.get(languages.STRING_COPY_PASSWORD));
+
+		buttonCopyEmail.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				Toolkit
+					.getDefaultToolkit()
+					.getSystemClipboard()
+					.setContents(new StringSelection(tfSelectedEmail.getText()), null);
+
+				showInfoDialog(currentLanguage.get(languages.STRING_PROMPT_EMAIL_COPIED));
+			}
+		});
+
+		buttonCopyUsername.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				Toolkit
+					.getDefaultToolkit()
+					.getSystemClipboard()
+					.setContents(new StringSelection(tfSelectedUsername.getText()), null);
+
+				showInfoDialog(currentLanguage.get(languages.STRING_PROMPT_USERNAME_COPIED));
+			}
+		});
+
+		buttonCopyPassword.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				Toolkit
+					.getDefaultToolkit()
+					.getSystemClipboard()
+					.setContents(new StringSelection(tfSelectedPassword.getText()), null);
+
+				showInfoDialog(currentLanguage.get(languages.STRING_PROMPT_PASSWORD_COPIED));
+			}
+		});
+
+	/*
+	 * The layout of the labels and textfields within the panel which will
+	 * display the details of the selected leaf node in the JTree.
+	 */
+		final int LABEL_FIELD_GAP = 8;
+		final int FIELD_NEXT_LABEL_GAP = 10;
+		final int WEST_GAP = 20;
+		final int VGAP = 20;
+		final int LABEL_LEFT = 5;
+		final int TEXTFIELD_BUTTON_GAP = 20;
+
+		detailsLayout.putConstraint(SpringLayout.NORTH, labelSelectedEmail, VGAP, SpringLayout.NORTH, panelDetails);
+		detailsLayout.putConstraint(SpringLayout.WEST, labelSelectedEmail, LABEL_LEFT, SpringLayout.WEST, tfSelectedEmail);
+
+		detailsLayout.putConstraint(SpringLayout.NORTH, tfSelectedEmail, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedEmail);
+		detailsLayout.putConstraint(SpringLayout.WEST, tfSelectedEmail, WEST_GAP, SpringLayout.WEST, panelDetails);
+
+		detailsLayout.putConstraint(SpringLayout.NORTH, buttonCopyEmail, 0, SpringLayout.NORTH, tfSelectedEmail);
+		detailsLayout.putConstraint(SpringLayout.WEST, buttonCopyEmail, TEXTFIELD_BUTTON_GAP, SpringLayout.EAST, tfSelectedEmail);
+
+		detailsLayout.putConstraint(SpringLayout.NORTH, labelSelectedUsername, FIELD_NEXT_LABEL_GAP, SpringLayout.SOUTH, tfSelectedEmail);
+		detailsLayout.putConstraint(SpringLayout.WEST, labelSelectedUsername, LABEL_LEFT, SpringLayout.WEST, tfSelectedUsername);
+
+		detailsLayout.putConstraint(SpringLayout.NORTH, tfSelectedUsername, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedUsername);
+		detailsLayout.putConstraint(SpringLayout.WEST, tfSelectedUsername, WEST_GAP, SpringLayout.WEST, panelDetails);
+
+		detailsLayout.putConstraint(SpringLayout.NORTH, buttonCopyUsername, 0, SpringLayout.NORTH, tfSelectedUsername);
+		detailsLayout.putConstraint(SpringLayout.WEST, buttonCopyUsername, TEXTFIELD_BUTTON_GAP, SpringLayout.EAST, tfSelectedUsername);
+
+		detailsLayout.putConstraint(
+			SpringLayout.NORTH,
+			labelSelectedPassword,
+			FIELD_NEXT_LABEL_GAP,
+			SpringLayout.SOUTH,
+			tfSelectedUsername
+		);
+
+		detailsLayout.putConstraint(SpringLayout.WEST, labelSelectedPassword, LABEL_LEFT, SpringLayout.WEST, tfSelectedPassword);
+
+		detailsLayout.putConstraint(SpringLayout.NORTH, tfSelectedPassword, LABEL_FIELD_GAP, SpringLayout.SOUTH, labelSelectedPassword);
+		detailsLayout.putConstraint(SpringLayout.WEST, tfSelectedPassword, WEST_GAP, SpringLayout.WEST, panelDetails);
+
+		detailsLayout.putConstraint(SpringLayout.NORTH, buttonCopyPassword, 0, SpringLayout.NORTH, tfSelectedPassword);
+		detailsLayout.putConstraint(SpringLayout.WEST, buttonCopyPassword, TEXTFIELD_BUTTON_GAP, SpringLayout.EAST, tfSelectedPassword);
+
+		detailsLayout.putConstraint(
+			SpringLayout.NORTH,
+			labelSelectedPasswordLen,
+			FIELD_NEXT_LABEL_GAP,
+			SpringLayout.SOUTH,
+			tfSelectedPassword
+		);
+
+		detailsLayout.putConstraint(SpringLayout.WEST, labelSelectedPasswordLen, LABEL_LEFT, SpringLayout.WEST, tfSelectedPasswordLen);
+
+		detailsLayout.putConstraint(
+			SpringLayout.NORTH,
+			tfSelectedPasswordLen,
+			LABEL_FIELD_GAP,
+			SpringLayout.SOUTH,
+			labelSelectedPasswordLen
+		);
+
+		detailsLayout.putConstraint(SpringLayout.WEST, tfSelectedPasswordLen, WEST_GAP, SpringLayout.WEST, panelDetails);
+
+		detailsLayout.putConstraint(
+			SpringLayout.NORTH,
+			labelSelectedPasswordAgeInDays,
+			FIELD_NEXT_LABEL_GAP,
+			SpringLayout.SOUTH,
+			tfSelectedPasswordLen
+		);
+
+		detailsLayout.putConstraint(
+			SpringLayout.WEST,
+			labelSelectedPasswordAgeInDays,
+			LABEL_LEFT,
+			SpringLayout.WEST,
+			tfSelectedPasswordAgeInDays
+		);
+
+		detailsLayout.putConstraint(SpringLayout.SOUTH, staleIcon, -10, SpringLayout.NORTH, tfSelectedPasswordAgeInDays);
+		detailsLayout.putConstraint(SpringLayout.EAST, staleIcon, 30, SpringLayout.EAST, labelSelectedPasswordAgeInDays);
+
+		detailsLayout.putConstraint(SpringLayout.SOUTH, freshIcon, -10, SpringLayout.NORTH, tfSelectedPasswordAgeInDays);
+		detailsLayout.putConstraint(SpringLayout.EAST, freshIcon, 30, SpringLayout.EAST, labelSelectedPasswordAgeInDays);
+
+		detailsLayout.putConstraint(
+			SpringLayout.NORTH,
+			tfSelectedPasswordAgeInDays,
+			LABEL_FIELD_GAP,
+			SpringLayout.SOUTH,
+			labelSelectedPasswordAgeInDays
+		);
+
+		detailsLayout.putConstraint(SpringLayout.WEST, tfSelectedPasswordAgeInDays, WEST_GAP, SpringLayout.WEST, panelDetails);
+
+		staleIcon.setVisible(false);
+		freshIcon.setVisible(false);
+
+		//panelDetails.setBackground(new Color(250, 250, 250));
+		//Border border = BorderFactory.createEtchedBorder(EtchedBorder.RAISED);
+		//TitledBorder titled = new TitledBorder(border, "PasswordDetails", TitledBorder.RIGHT, TitledBorder.BELOW_TOP);
+
+		panelDetails.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+
+		panelDetails.add(labelSelectedEmail);
+		panelDetails.add(tfSelectedEmail);
+		panelDetails.add(buttonCopyEmail);
+		panelDetails.add(labelSelectedUsername);
+		panelDetails.add(tfSelectedUsername);
+		panelDetails.add(buttonCopyUsername);
+		panelDetails.add(labelSelectedPasswordLen);
+		panelDetails.add(tfSelectedPasswordLen);
+		panelDetails.add(labelSelectedPasswordAgeInDays);
+		panelDetails.add(staleIcon);
+		panelDetails.add(freshIcon);
+		panelDetails.add(tfSelectedPasswordAgeInDays);
+		panelDetails.add(labelSelectedPassword);
+		panelDetails.add(tfSelectedPassword);
+		panelDetails.add(buttonCopyPassword);
+
+		return;
+	}
+
 
 	public void createAndShowGUI()
 	{
@@ -4074,6 +4112,8 @@ public class PasswordManager extends JFrame
  * Define the sizes of the components within the frame and calculate
  * the frame width and height based on these sizes.
  */
+		final int IMAGE_ICON_SIZE = 22;
+
 		final int ICON_WIDTH = iconUnlocked128.getIconWidth();
 		final int ICON_HEIGHT = iconUnlocked128.getIconHeight();
 
@@ -4086,7 +4126,7 @@ public class PasswordManager extends JFrame
 		final int TREE_SCROLLBAR_HEIGHT = 350;
 		final int PANEL_BUTTONS_HEIGHT = 50;
 		final int PANEL_DETAILS_WIDTH = 480;
-		final int PANEL_DETAILS_HEIGHT = TREE_SCROLLBAR_HEIGHT + TF_SEARCH_HEIGHT;
+		final int PANEL_DETAILS_HEIGHT = TREE_SCROLLBAR_HEIGHT + TF_SEARCH_HEIGHT - IMAGE_ICON_SIZE;
 		final int TF_HEIGHT = 27;
 
 		final int FRAME_WIDTH =
@@ -4098,11 +4138,9 @@ public class PasswordManager extends JFrame
 		final int FRAME_HEIGHT =
 			ICON_HEIGHT +
 			(VERTICAL_GAP<<1) +
-			FRAME_MARGIN + 
 			TF_HEIGHT +
-			(FRAME_MARGIN<<1) +
-			TREE_SCROLLBAR_HEIGHT +
-			PANEL_BUTTONS_HEIGHT;
+			(FRAME_MARGIN*3) +
+			TREE_SCROLLBAR_HEIGHT;
 
 		final int TF_SEARCH_WIDTH = TREE_SCROLLBAR_WIDTH-25;
 		final int TF_DETAILS_WIDTH = 400;
@@ -4150,11 +4188,14 @@ public class PasswordManager extends JFrame
 	 * Panel containing buttons for various
 	 * functions carried out on password entries.
 	 */
-		JPanel panelButtons = new JPanel(new GridLayout(1, 0, 20, 0));
+		JPanel panelButtons = new JPanel(new GridLayout(1, 0, 0, 0));
+		panelButtons.setPreferredSize(new Dimension(PANEL_DETAILS_WIDTH, IMAGE_ICON_SIZE));
 
-		final int IMAGE_ICON_SIZE = 28;
-		JButton buttonChange = new TransparentButton(getScaledImageIcon(iconChange64, IMAGE_ICON_SIZE, IMAGE_ICON_SIZE));
-		JButton buttonRemove = new TransparentButton(getScaledImageIcon(iconBin64, IMAGE_ICON_SIZE, IMAGE_ICON_SIZE));
+		JButton buttonChange =
+			new GenericButton(getScaledImageIcon(iconChange64, IMAGE_ICON_SIZE, IMAGE_ICON_SIZE));
+
+		JButton buttonRemove =
+			new GenericButton(getScaledImageIcon(iconBin64, IMAGE_ICON_SIZE, IMAGE_ICON_SIZE));
 
 		panelButtons.add(buttonChange);
 		panelButtons.add(buttonRemove);
@@ -4204,7 +4245,7 @@ public class PasswordManager extends JFrame
 		spring.putConstraint(SpringLayout.WEST, sp, FRAME_MARGIN, SpringLayout.WEST, contentPane);
 		spring.putConstraint(SpringLayout.NORTH, sp, 0, SpringLayout.SOUTH, tfSearch);
 
-		spring.putConstraint(SpringLayout.EAST, panelButtons, -40, SpringLayout.EAST, panelDetails);
+		spring.putConstraint(SpringLayout.WEST, panelButtons, PANEL_SCROLLBAR_GAP, SpringLayout.EAST, sp);
 		spring.putConstraint(SpringLayout.NORTH, panelButtons, 0, SpringLayout.NORTH, tfSearch);
 
 		spring.putConstraint(SpringLayout.WEST, panelDetails, PANEL_SCROLLBAR_GAP, SpringLayout.EAST, sp);
@@ -4231,6 +4272,9 @@ public class PasswordManager extends JFrame
 		{
 			HashMap.Entry<String,TransparentButton> entry = iter.next();
 			TransparentButton b = entry.getValue();
+
+			b.setToolTipText(currentLanguage.get(languages.STRING_CLICK_TO_CHANGE_LANGUAGE));
+			//b.setBorder(BorderFactory.createRaisedBevelBorder());
 
 			spring.putConstraint(SpringLayout.EAST, b, -10, SpringLayout.EAST, contentPane);
 			spring.putConstraint(SpringLayout.NORTH, b, 10, SpringLayout.NORTH, contentPane);
