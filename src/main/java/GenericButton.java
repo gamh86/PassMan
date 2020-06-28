@@ -14,4 +14,11 @@ public class GenericButton extends JButton
 
 		setBackground(color);
 	}
+
+	public GenericButton(ImageIcon icon, Color col)
+	{
+		super(icon);
+
+		setBackground(col);
+	}
 }
