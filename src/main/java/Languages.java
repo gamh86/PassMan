@@ -53,6 +53,7 @@ public class Languages
 	public static final int STRING_CONFIRM = 0x02c;
 	public static final int STRING_PASSWORD_IS_STALE = 0x02d;
 	public static final int STRING_PASSWORD_IS_FRESH = 0x02e;
+	public static final int STRING_CLICK_TO_CHANGE_LANGUAGE = 0x02f;
 
 	public static final int STRING_PROMPT_DETAILS_CHANGED = 0x100;
 	public static final int STRING_PROMPT_PASSWORD_COPIED = 0x101;
@@ -65,7 +66,7 @@ public class Languages
 	public static final int STRING_PROMPT_PASSWORD_FILE_CREATED = 0x107;
 	public static final int STRING_PROMPT_EMAIL_COPIED = 0x108;
 	public static final int STRING_PROMPT_USERNAME_COPIED = 0x109;
-	public static final int STRING_PROMPT_CHANGED_LANGUAGE = 0x10a;
+	public static final int STRING_PROMPT_LANGUAGE_CHANGED = 0x10a;
 	public static final int STRING_PROMPT_UNLOCK_PASSWORD_FILE = 0x10b;
 	public static final int STRING_PROMPT_CREATED_BACKUP_FILE = 0x10c;
 	public static final int STRING_PROMPT_OK = 0x10d;
@@ -176,6 +177,7 @@ public class Languages
 		map.put(STRING_CONFIRM, "확인");
 		map.put(STRING_PASSWORD_IS_STALE, "비밀번호가 오래되었습니다");
 		map.put(STRING_PASSWORD_IS_FRESH, "비밀번호가 최신입니다");
+		map.put(STRING_CLICK_TO_CHANGE_LANGUAGE, "언어를 변경하려면 클릭하십시오");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "비밀번호 관리자 설정");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "비밀번호 설경");
@@ -192,11 +194,11 @@ public class Languages
 		map.put(STRING_PROMPT_NO_PASSWORDS, "비밀번호들이 없습니다");
 		map.put(STRING_PROMPT_OK, "확인");
 		map.put(STRING_PROMPT_CANCEL, "취소");
-		map.put(STRING_PROMPT_CHANGED_LANGUAGE, "언어를 변경되었습니다");
 		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE, "마스터 비밀번호를 입력");//하십시오");
 		map.put(STRING_PROMPT_CREATED_BACKUP_FILE, "백업 파일을 만듭니되었습니다");
 		map.put(STRING_PROMPT_EMAIL_COPIED, "클립보드에게 이메일이 복사하되었습니다");
 		map.put(STRING_PROMPT_USERNAME_COPIED, "클립보드에게 사용자 이름이 복사하되었습니다");
+		map.put(STRING_PROMPT_LANGUAGE_CHANGED, "언어를 변경되었습니다");
 
 		map.put(STRING_ERROR_PASSWORD_ID, "해당 비밀번호 아이디가 없습니다");
 		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "비밀번호가 이미 존재합니다");
@@ -274,6 +276,7 @@ public class Languages
 		map.put(STRING_CONFIRM, "Confirmer");
 		map.put(STRING_PASSWORD_IS_STALE, "Mot de passe périmé");
 		map.put(STRING_PASSWORD_IS_FRESH, "Mot de passe toujours à jour");
+		map.put(STRING_CLICK_TO_CHANGE_LANGUAGE, "Cliquer pour changer de langue");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Détails du mot de passe");
@@ -290,11 +293,11 @@ public class Languages
 		map.put(STRING_PROMPT_NO_PASSWORDS, "Aucun mot de passe");
 		map.put(STRING_PROMPT_OK, "OK");
 		map.put(STRING_PROMPT_CANCEL, "Annuler");
-		map.put(STRING_PROMPT_CHANGED_LANGUAGE, "La langue a été changée");
 		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE, "Saisir mot de passe maître");
 		map.put(STRING_PROMPT_CREATED_BACKUP_FILE, "Fichier de sauvegarde a été créée");
 		map.put(STRING_PROMPT_EMAIL_COPIED, "Émail copié");
 		map.put(STRING_PROMPT_USERNAME_COPIED, "Pseudo copié");
+		map.put(STRING_PROMPT_LANGUAGE_CHANGED, "La langue a été changée");
 
 		map.put(STRING_ERROR_PASSWORD_ID, "Aucun ID trouvé pour cela");
 		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "Il y a déjà un mot de passe avec cet ID");
@@ -376,6 +379,7 @@ public class Languages
 		map.put(STRING_CONFIRM, "Confirm");
 		map.put(STRING_PASSWORD_IS_STALE, "Password is stale");
 		map.put(STRING_PASSWORD_IS_FRESH, "Password is still fresh");
+		map.put(STRING_CLICK_TO_CHANGE_LANGUAGE, "Click to change language");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Password Manager Configuration");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Password Details");
@@ -392,11 +396,11 @@ public class Languages
 		map.put(STRING_PROMPT_NO_PASSWORDS, "No passwords");
 		map.put(STRING_PROMPT_OK, "OK");
 		map.put(STRING_PROMPT_CANCEL, "Cancel");
-		map.put(STRING_PROMPT_CHANGED_LANGUAGE, "Language changed");
 		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE, "Enter master password");
 		map.put(STRING_PROMPT_CREATED_BACKUP_FILE, "Created backup file");
 		map.put(STRING_PROMPT_EMAIL_COPIED, "Email copied");
 		map.put(STRING_PROMPT_USERNAME_COPIED, "Username copied");
+		map.put(STRING_PROMPT_LANGUAGE_CHANGED, "Language changed");
 
 		map.put(STRING_ERROR_PASSWORD_ID, "No such password ID");
 		map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "");
@@ -475,6 +479,7 @@ public class Languages
 		map.put(STRING_CONFIRM, "Mengesahkan");
 		map.put(STRING_PASSWORD_IS_STALE, "Kata laluan sudah basi");
 		map.put(STRING_PASSWORD_IS_FRESH, "Kata laluan masih baru");
+		map.put(STRING_CLICK_TO_CHANGE_LANGUAGE, "klik untuk menukar bahasa");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Konfigurasi Pengurus Kata Laluan");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Butiran Kata Laluan");
@@ -491,11 +496,11 @@ public class Languages
 		map.put(STRING_PROMPT_NO_PASSWORDS, "Tiada kata laluan");
 		map.put(STRING_PROMPT_OK, "Okey");
 		map.put(STRING_PROMPT_CANCEL, "Batalkan");
-		map.put(STRING_PROMPT_CHANGED_LANGUAGE, "Bahasa diubah");
 		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE, "Masukkan kata laluan induk");
 		map.put(STRING_PROMPT_CREATED_BACKUP_FILE, "Fail sandaran dibuat");
 		map.put(STRING_PROMPT_EMAIL_COPIED, "Email telah disalin");
 		map.put(STRING_PROMPT_USERNAME_COPIED, "Nama lengguna telah disalin");
+		map.put(STRING_PROMPT_LANGUAGE_CHANGED, "Bahasa diubah");
 
 		map.put(STRING_ERROR_PASSWORD_ID, "Tiada ID kata laluan untuk itu");
 		//map.put(STRING_ERROR_PASSWORD_ID_EXISTS, "Kata laluan untuk ID ini sudah wujud");
@@ -566,6 +571,7 @@ public class Languages
 		map.put(STRING_CONFIRM, "Подтвердить");
 		map.put(STRING_PASSWORD_IS_STALE, "Пароль устарел");
 		map.put(STRING_PASSWORD_IS_FRESH, "Пароль свежий");
+		map.put(STRING_CLICK_TO_CHANGE_LANGUAGE, "нажмите, чтобы изменить язык");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Конфигурация Менеджера Паролей");
 		//map.put(STRING_TITLE_PASSWORD_DETAILS, "Password Details");
@@ -582,11 +588,11 @@ public class Languages
 		map.put(STRING_PROMPT_NO_PASSWORDS, "Нет паролей");
 		map.put(STRING_PROMPT_OK, "Хорошо");
 		map.put(STRING_PROMPT_CANCEL, "Отмена");
-		map.put(STRING_PROMPT_CHANGED_LANGUAGE, "Язык изменился");
 		map.put(STRING_PROMPT_UNLOCK_PASSWORD_FILE, "Введите мастер-пароль");
 		map.put(STRING_PROMPT_CREATED_BACKUP_FILE, "Создан файл резервной копии");
 		map.put(STRING_PROMPT_EMAIL_COPIED, "Эл. адрес скопировано");
 		map.put(STRING_PROMPT_USERNAME_COPIED, "Имя пользователя скопировано");
+		map.put(STRING_PROMPT_LANGUAGE_CHANGED, "Язык изменился");
 
 		map.put(STRING_ERROR_PASSWORD_ID, "Нет такого идентификатора пароля");
 		map.put(STRING_ERROR_INCORRECT_PASSWORD, "Неверный пароль");
