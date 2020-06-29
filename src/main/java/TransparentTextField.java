@@ -3,6 +3,7 @@ package custom;
 import javax.swing.JTextField;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Font;
 
 public class TransparentTextField extends JTextField
