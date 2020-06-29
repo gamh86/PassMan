@@ -54,6 +54,8 @@ public class Languages
 	public static final int STRING_PASSWORD_IS_STALE = 0x02d;
 	public static final int STRING_PASSWORD_IS_FRESH = 0x02e;
 	public static final int STRING_CLICK_TO_CHANGE_LANGUAGE = 0x02f;
+	public static final int STRING_PASSWORD_DETAILS = 0x030;
+	public static final int STRING_CHANGE_CHARSET_PASSWORD_GENERATION = 0x031;
 
 	public static final int STRING_PROMPT_DETAILS_CHANGED = 0x100;
 	public static final int STRING_PROMPT_PASSWORD_COPIED = 0x101;
@@ -178,6 +180,8 @@ public class Languages
 		map.put(STRING_PASSWORD_IS_STALE, "비밀번호가 오래되었습니다");
 		map.put(STRING_PASSWORD_IS_FRESH, "비밀번호가 최신입니다");
 		map.put(STRING_CLICK_TO_CHANGE_LANGUAGE, "언어를 변경하려면 클릭하십시오");
+		map.put(STRING_PASSWORD_DETAILS, "비밀번호 세부 사항");
+		map.put(STRING_CHANGE_CHARSET_PASSWORD_GENERATION, "비밀번호 생성을 위해 문자 세트를 변경");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "비밀번호 관리자 설정");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "비밀번호 설경");
@@ -277,6 +281,8 @@ public class Languages
 		map.put(STRING_PASSWORD_IS_STALE, "Mot de passe périmé");
 		map.put(STRING_PASSWORD_IS_FRESH, "Mot de passe toujours à jour");
 		map.put(STRING_CLICK_TO_CHANGE_LANGUAGE, "Cliquer pour changer de langue");
+		map.put(STRING_PASSWORD_DETAILS, "Détails du mot de passe");
+		map.put(STRING_CHANGE_CHARSET_PASSWORD_GENERATION, "Modifier jeu de caractères pour génération du mot de passe");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Détails du mot de passe");
@@ -380,6 +386,8 @@ public class Languages
 		map.put(STRING_PASSWORD_IS_STALE, "Password is stale");
 		map.put(STRING_PASSWORD_IS_FRESH, "Password is still fresh");
 		map.put(STRING_CLICK_TO_CHANGE_LANGUAGE, "Click to change language");
+		map.put(STRING_PASSWORD_DETAILS, "Password Details");
+		map.put(STRING_CHANGE_CHARSET_PASSWORD_GENERATION, "Modify the charset for password generation");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Password Manager Configuration");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Password Details");
@@ -480,6 +488,8 @@ public class Languages
 		map.put(STRING_PASSWORD_IS_STALE, "Kata laluan sudah basi");
 		map.put(STRING_PASSWORD_IS_FRESH, "Kata laluan masih baru");
 		map.put(STRING_CLICK_TO_CHANGE_LANGUAGE, "klik untuk menukar bahasa");
+		map.put(STRING_PASSWORD_DETAILS, "Perincian Kata Laluan");
+		map.put(STRING_CHANGE_CHARSET_PASSWORD_GENERATION, "Tukar carta untuk penjanaan kata laluan");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Konfigurasi Pengurus Kata Laluan");
 		map.put(STRING_TITLE_PASSWORD_DETAILS, "Butiran Kata Laluan");
@@ -572,6 +582,8 @@ public class Languages
 		map.put(STRING_PASSWORD_IS_STALE, "Пароль устарел");
 		map.put(STRING_PASSWORD_IS_FRESH, "Пароль свежий");
 		map.put(STRING_CLICK_TO_CHANGE_LANGUAGE, "нажмите, чтобы изменить язык");
+		map.put(STRING_PASSWORD_DETAILS, "Детали Пароля");
+		map.put(STRING_CHANGE_CHARSET_PASSWORD_GENERATION, "Измените кодировку для генерации пароля");
 
 		map.put(STRING_TITLE_PASSWORD_MANAGER_CONFIGURATION, "Конфигурация Менеджера Паролей");
 		//map.put(STRING_TITLE_PASSWORD_DETAILS, "Password Details");
