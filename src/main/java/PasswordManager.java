@@ -279,6 +279,8 @@ public class PasswordManager extends JFrame
 /*
  * Paths to icons.
  */
+	private static final String secure1200 = ICONS_DIR + "/secure_1200x1200.png";
+
 	private static final String analysis128 = ICONS_DIR + "/analysis_128x128.png";
 	private static final String locked128 = ICONS_DIR + "/locked_128x128.png";
 	private static final String secret128 = ICONS_DIR + "/secret_128x128.png";
@@ -327,6 +329,8 @@ public class PasswordManager extends JFrame
 
 	private static final String _download = ICONS_DIR + "/download.png";
 	private static final String _upload = ICONS_DIR + "/upload.png";
+
+	private static ImageIcon iconSecure1200 = null;
 
 	private static ImageIcon iconAnalysis128 = null;
 	private static ImageIcon iconLocked128 = null;
@@ -392,6 +396,8 @@ public class PasswordManager extends JFrame
 
 	private void getImages()
 	{
+		iconSecure1200 = new ImageIcon(secure1200);
+
 		iconAnalysis128 = new ImageIcon(analysis128);
 		iconLocked128 = new ImageIcon(locked128);
 		iconSecret128 = new ImageIcon(secret128);
@@ -442,43 +448,62 @@ public class PasswordManager extends JFrame
 		iconUpload = new ImageIcon(_upload);
 	}
 
+	/**
+	 * Let the user turn on or off characters in the set from which
+	 * characters are chosen to generate a random password. This is
+	 * useful because some websites won't allow particular characters
+	 * in a password, such as double quotes.
+	 */
 	private void showCharacterSet()
 	{
 		JFrame frame = new JFrame();
 		SpringLayout spring = new SpringLayout();
 		Container contentPane = frame.getContentPane();
-		final int windowWidth = 850;
-		final int windowHeight = 450;
-		final int buttonContainerWidth = (windowWidth - 50);
-		final int buttonContainerHeight = ((windowHeight>>2)*3);
-		final int leftOffset = ((windowWidth-buttonContainerWidth)>>1);
+
+		final int FRAME_MARGIN = 30;
+		final int NR_BUTTONS = (0x7e - 0x21) - 1; // no '|' character
+		final int BUTTON_WIDTH = 60;
+		final int BUTTON_HEIGHT = 35;
+		final int CHARSET_CONTAINER_WIDTH = (14 * BUTTON_WIDTH);
+		final int CHARSET_CONTAINER_HEIGHT = ((NR_BUTTONS / 12) * BUTTON_HEIGHT);
+		final int VGAP = 20;
+		final int FRAME_WIDTH = (FRAME_MARGIN<<1) + CHARSET_CONTAINER_WIDTH;
+		final int FRAME_HEIGHT = (FRAME_MARGIN<<2) + FRAME_MARGIN + CHARSET_CONTAINER_HEIGHT;
+
 		boolean on = true;
 
 		contentPane.setLayout(spring);
 
-		frame.setSize(windowWidth, windowHeight);
+		frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
 		JPanel panelTop = new JPanel(new FlowLayout());
 		JPanel panelButtonContainer = new JPanel(new FlowLayout());
 
-		panelButtonContainer.setPreferredSize(new Dimension(buttonContainerWidth, buttonContainerHeight));
+		panelButtonContainer.setPreferredSize(new Dimension(CHARSET_CONTAINER_WIDTH, CHARSET_CONTAINER_HEIGHT));
 
 		JTextArea taCharacterSetInfo = new JTextArea(currentLanguage.get(languages.STRING_TOGGLE_CHARACTER_SET));
 
 		taCharacterSetInfo.setEditable(false);
 		taCharacterSetInfo.setBorder(null);
 		taCharacterSetInfo.setBackground(colorFrame);
-		taCharacterSetInfo.setFont(fontLargePrompt);
+		taCharacterSetInfo.setFont(new Font("Courier New", Font.PLAIN, 25));
 
-		spring.putConstraint(SpringLayout.WEST, panelTop, 30, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, panelTop, 40, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.WEST, panelTop, 120, SpringLayout.WEST, panelButtonContainer);
+		spring.putConstraint(SpringLayout.NORTH, panelTop, FRAME_MARGIN, SpringLayout.NORTH, contentPane);
 
-		spring.putConstraint(SpringLayout.WEST, panelButtonContainer, 20, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, panelButtonContainer, 20, SpringLayout.SOUTH, panelTop);
+		spring.putConstraint(SpringLayout.WEST, panelButtonContainer, FRAME_MARGIN, SpringLayout.WEST, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, panelButtonContainer, VGAP, SpringLayout.SOUTH, panelTop);
 
 		panelTop.add(taCharacterSetInfo);
 
+		Dimension sizeButton = new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT);
+
+	/*
+	 * Display each character button as being on or off (selected or deselected).
+	 * When turning a character on or off, the action listener will create a
+	 * new set of characters with the respective character on or off.
+	 */
 		for (byte b = (byte)0x21; b < (byte)0x7e; ++b)
 		{
 			if (b == (byte)'|')
@@ -498,11 +523,12 @@ public class PasswordManager extends JFrame
 			JButton button = new JButton(new String(_b));
 			button.addActionListener(new characterButtonListener());
 			button.setBackground(true == on ? colorButtonSelected : colorButtonDeselected);
+			button.setPreferredSize(sizeButton);
 			panelButtonContainer.add(button);
 		}
 
-		contentPane.add(panelTop, BorderLayout.NORTH);
-		contentPane.add(panelButtonContainer, BorderLayout.CENTER);
+		contentPane.add(panelTop);
+		contentPane.add(panelButtonContainer);
 
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
@@ -714,7 +740,14 @@ public class PasswordManager extends JFrame
 	private void createPasswordEntriesMap()
 	{
 		if (false == fileContentsCached || null == fContents)
+		{
 			getFileContents(passwordFile);
+			if (null == fContents)
+			{
+				showErrorDialog("A fatal error occurred - password file contents not decrypted");
+				System.exit(1);
+			}
+		}
 
 		try
 		{
@@ -748,7 +781,7 @@ public class PasswordManager extends JFrame
 			AESCrypt aes = new AESCrypt();
 			fContents = aes.decryptFile(path, password);
 			fileContentsCached = true;
-			createPasswordEntriesMap();
+			//createPasswordEntriesMap();
 			return;
 		}
 		catch (Exception e)
@@ -1691,6 +1724,7 @@ public class PasswordManager extends JFrame
 		if (null == passwordEntries)
 		{
 			getFileContents(passwordFile);
+			createPasswordEntriesMap();
 		}
 
 		JFrame frame = new JFrame();
@@ -2540,7 +2574,7 @@ public class PasswordManager extends JFrame
 
 		JButton buttonConfirm = new TransparentButton(iconConfirm32);
 		JButton buttonChangeCharset =
-			new TransparentButton(getScaledImageIcon(iconSpanner32, ICONS_SMALL_WIDTH, ICONS_SMALL_HEIGHT));
+			new TransparentButton(getScaledImageIcon(iconSpanner32, ICONS_TINY_WIDTH, ICONS_TINY_HEIGHT));
 
 		buttonChangeCharset.setToolTipText(currentLanguage.get(languages.STRING_CHANGE_CHARSET_PASSWORD_GENERATION));
 		buttonChangeCharset.setEnabled(false);
@@ -2701,7 +2735,10 @@ public class PasswordManager extends JFrame
 				Object[] obj = null;
 
 				if (false == fileContentsCached)
+				{
 					getFileContents(passwordFile);
+					createPasswordEntriesMap();
+				}
 
 				newEntry.setHash(getUniqueId(newEntry));
 
@@ -2868,7 +2905,7 @@ public class PasswordManager extends JFrame
 		checkGenerateRandom.setEnabled(false);
 
 		JButton buttonConfirm = new TransparentButton(iconConfirm32);
-		JButton buttonChangeCharset = new TransparentButton(getScaledImageIcon(iconSpanner32, 22, 22));
+		JButton buttonChangeCharset = new TransparentButton(getScaledImageIcon(iconSpanner32, ICONS_TINY_WIDTH, ICONS_TINY_HEIGHT));
 		//JLabel labelChangeCharset = new JLabel(currentLanguage.get(languages.STRING_CHARACTER_SET));
 		//JLabel labelConfirm = new JLabel(currentLanguage.get(languages.STRING_CONFIRM));
 
@@ -3233,7 +3270,7 @@ public class PasswordManager extends JFrame
 		final int HGAP = 20;
 		final int FRAME_MARGIN = 60;
 		final int FRAME_WIDTH = (FRAME_MARGIN<<1) + ICON_WIDTH + HGAP + TF_WIDTH + ICONS_SMALL_WIDTH;
-		final int FRAME_HEIGHT = (FRAME_MARGIN<<1) + ICON_HEIGHT + TF_HEIGHT;
+		final int FRAME_HEIGHT = FRAME_MARGIN + (FRAME_MARGIN>>1) + ICON_HEIGHT + TF_HEIGHT;
 
 		Dimension sizePassField = new Dimension(TF_WIDTH, TF_HEIGHT);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -3248,11 +3285,13 @@ public class PasswordManager extends JFrame
 		taInfo.setBackground(contentPane.getBackground());
 		taInfo.setFont(new Font("Times New Roman", Font.PLAIN, 20));
 
+		setIconImage(iconSecure1200.getImage());
+
 		passField.setPreferredSize(sizePassField);
 		passField.setFont(fontInput);
 
 		spring.putConstraint(SpringLayout.WEST, containerIcon, FRAME_MARGIN, SpringLayout.WEST, contentPane);
-		spring.putConstraint(SpringLayout.NORTH, containerIcon, FRAME_MARGIN, SpringLayout.NORTH, contentPane);
+		spring.putConstraint(SpringLayout.NORTH, containerIcon, FRAME_MARGIN>>1, SpringLayout.NORTH, contentPane);
 
 		spring.putConstraint(SpringLayout.WEST, taInfo, HGAP+20, SpringLayout.EAST, containerIcon);
 		spring.putConstraint(SpringLayout.NORTH, taInfo, 0, SpringLayout.NORTH, containerIcon);
@@ -3294,23 +3333,6 @@ public class PasswordManager extends JFrame
 				}
 
 				getFileContents(passwordFile);
-				//AESCrypt aes = new AESCrypt();
-
-/*
-				try
-				{
-					byte[] data = sdata.getBytes("UTF-8");
-					ObjectMapper mapper = new ObjectMapper();
-					com.fasterxml.jackson.core.type.TypeReference typeRef = new com.fasterxml.jackson.core.type.TypeReference<TreeMap<String,ArrayList<PasswordEntry>>>() {};
-
-					passwordEntries = (TreeMap<String,ArrayList<PasswordEntry>>)mapper.readValue(data, typeRef);
-					printPasswordEntries();
-				}
-				catch (Exception e)
-				{
-					System.err.println(e.getMessage());
-				}
-*/
 
 				if (null == fContents)
 				{
@@ -3328,7 +3350,7 @@ public class PasswordManager extends JFrame
 				}
 
 				//fileContentsCached = true;
-				//createPasswordEntriesMap();
+				createPasswordEntriesMap();
 
 				remove(containerIcon);
 				remove(taInfo);
@@ -3624,6 +3646,9 @@ public class PasswordManager extends JFrame
 
 			if (null == __n || false == __n.isLeaf())
 			{
+				staleIcon.setVisible(false);
+				freshIcon.setVisible(false);
+
 				clearSelectedDetailsFields();
 				return;
 			}
@@ -3940,7 +3965,7 @@ public class PasswordManager extends JFrame
 		labelSelectedPasswordAgeInDays = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD_AGE_DAYS));
 		labelSelectedPassword = new GenericLabel(currentLanguage.get(languages.STRING_PASSWORD));
 
-		ImageIcon iconCopy25 = getScaledImageIcon(iconCopy32, 25, 25);
+		ImageIcon iconCopy25 = getScaledImageIcon(iconCopy32, ICONS_SMALL_WIDTH, ICONS_SMALL_HEIGHT);
 
 		JButton buttonCopyEmail = new TransparentButton(iconCopy25);
 		JButton buttonCopyUsername = new TransparentButton(iconCopy25);
@@ -3996,7 +4021,7 @@ public class PasswordManager extends JFrame
 		final int LABEL_FIELD_GAP = 6;
 		final int FIELD_NEXT_LABEL_GAP = 8;
 		final int WEST_GAP = 20;
-		final int VGAP = 12;
+		final int VGAP = 20;
 		final int LABEL_LEFT = 5;
 		final int TEXTFIELD_BUTTON_GAP = 20;
 
@@ -4090,6 +4115,8 @@ public class PasswordManager extends JFrame
 		freshIcon.setVisible(false);
 
 		//panelDetails.setBackground(new Color(250, 250, 250));
+
+	/*
 		Border border = BorderFactory.createEtchedBorder(EtchedBorder.RAISED);
 		TitledBorder titled = new TitledBorder(
 			border,
@@ -4097,8 +4124,9 @@ public class PasswordManager extends JFrame
 			TitledBorder.RIGHT,
 			TitledBorder.DEFAULT_POSITION
 		);
+	*/
 
-		panelDetails.setBorder(titled);
+		panelDetails.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 
 		panelDetails.add(labelSelectedEmail);
 		panelDetails.add(tfSelectedEmail);
@@ -4192,10 +4220,10 @@ public class PasswordManager extends JFrame
 	 * for a password ID In the JTree.
 	 */
 		JTextField tfSearch = new GenericTextField("");
-		JButton buttonSearch = new GenericButton(getScaledImageIcon(iconSearch32, 20, 20));
+		JButton buttonSearch = new GenericButton(getScaledImageIcon(iconSearch32, ICONS_TINY_WIDTH, ICONS_TINY_HEIGHT));
 
 		tfSearch.setPreferredSize(new Dimension(TF_SEARCH_WIDTH, TF_SEARCH_HEIGHT));
-		buttonSearch.setPreferredSize(new Dimension(25, 25));
+		buttonSearch.setPreferredSize(new Dimension(TF_SEARCH_HEIGHT, TF_SEARCH_HEIGHT));
 		JLabel unlockedContainer = new JLabel(iconShield128);
 
 	/*
@@ -4217,6 +4245,21 @@ public class PasswordManager extends JFrame
 		panelButtons.add(buttonAdd);
 		panelButtons.add(buttonChange);
 		panelButtons.add(buttonRemove);
+
+
+	/*
+	 * For pushing encrypted backup to GDrive
+	 */
+		JButton buttonGDrive = new JButton(iconGDrive32);
+
+		buttonGDrive.setBackground(colorFrame);
+		buttonGDrive.setBorder(null);
+
+		JLabel labelGDrive = new JLabel("Google Drive");
+		labelGDrive.setFont(fontLabel);
+
+		int sizeIconWidth = iconGDrive32.getIconWidth();
+		int sizeIconHeight = iconGDrive32.getIconHeight();
 
 		// taAppName is a global variable
 		taAppName = new JTextArea(currentLanguage.get(languages.STRING_APPLICATION_NAME));
@@ -4269,10 +4312,14 @@ public class PasswordManager extends JFrame
 		spring.putConstraint(SpringLayout.WEST, panelDetails, PANEL_SCROLLBAR_GAP, SpringLayout.EAST, sp);
 		spring.putConstraint(SpringLayout.NORTH, panelDetails, 0, SpringLayout.NORTH, tfSearch);
 
+		spring.putConstraint(SpringLayout.EAST, buttonGDrive, 0, SpringLayout.EAST, panelDetails);
+		spring.putConstraint(SpringLayout.SOUTH, buttonGDrive, -10, SpringLayout.NORTH, panelDetails);
+
 		contentPane.add(unlockedContainer);
 		contentPane.add(taAppName);
 		contentPane.add(tfSearch);
 		contentPane.add(buttonSearch);
+		contentPane.add(buttonGDrive);
 		contentPane.add(sp);
 		contentPane.add(panelDetails);
 		contentPane.add(panelButtons);
@@ -4340,6 +4387,28 @@ public class PasswordManager extends JFrame
 
 				doSearchPasswordId(tfSearch.getText());
 				tfSearch.setText("");
+			}
+		});
+
+		buttonGDrive.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent event)
+			{
+				try
+				{
+					GDriveBackup gbackup = new GDriveBackup();
+					gbackup.doFileBackup(passwordFile);
+				}
+				catch (IOException e1)
+				{
+					showErrorDialog(e1.getMessage());
+				}
+				catch (GeneralSecurityException e2)
+				{
+					showErrorDialog(e2.getMessage());
+				}
+
+				showInfoDialog(currentLanguage.get(languages.STRING_PROMPT_CREATED_BACKUP_FILE));
 			}
 		});
 
