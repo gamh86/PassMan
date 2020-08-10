@@ -3685,6 +3685,12 @@ public class PasswordManager extends JFrame
 		}
 	}
 
+	/**
+	 * Search for the given ID in the tree of password IDs.
+	 * Try to find an exact match first. If no exact match
+	 * is found, search again for any ID containing the search
+	 * given.
+	 */
 	private void doSearchPasswordId(String id)
 	{
 		if (0 == id.length())
@@ -3707,6 +3713,27 @@ public class PasswordManager extends JFrame
 				
 				found = true;
 				break;
+			}
+		}
+
+		if (false == found)
+		{
+			Pattern pn = Pattern.compile(".*" + id + ".*");
+			for (DefaultMutableTreeNode n = (DefaultMutableTreeNode)r.getFirstChild();
+				null != n;
+				n = (DefaultMutableTreeNode)n.getNextSibling())
+			{
+				Matcher m = pn.matcher(n.toString());
+				if (true == m.find())
+				{
+					TreePath p = new TreePath(n.getPath());
+					Rectangle area = tree.getPathBounds(p);
+					area.height = tree.getVisibleRect().height;
+					tree.scrollRectToVisible(area);
+					tree.expandPath(p);
+
+					found = true;
+				}
 			}
 		}
 
@@ -4147,6 +4174,10 @@ public class PasswordManager extends JFrame
 		return;
 	}
 
+	private void showGDriveOptions()
+	{
+		return;
+	}
 
 	public void createAndShowGUI()
 	{
@@ -4394,6 +4425,8 @@ public class PasswordManager extends JFrame
 			@Override
 			public void actionPerformed(ActionEvent event)
 			{
+				showGDriveOptions();
+/*
 				try
 				{
 					GDriveBackup gbackup = new GDriveBackup();
@@ -4409,6 +4442,7 @@ public class PasswordManager extends JFrame
 				}
 
 				showInfoDialog(currentLanguage.get(languages.STRING_PROMPT_CREATED_BACKUP_FILE));
+*/
 			}
 		});
 
